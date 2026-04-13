@@ -30,7 +30,7 @@ h1 { font-weight: 800 !important; letter-spacing: -0.5px; }
 page = st.sidebar.radio("메뉴 선택", ["🏠 행사 안내", "👥 조원 명단 확인"])
 # --- PAGE 1: 행사 안내 ---
 if page == "🏠 행사 안내":
-st.title("CEO 소통 산책")
+    st.title("CEO 소통 산책")
 st.markdown("### 금오산 올레길 코스 안내")
 # 상단 요약 카드
 st.markdown("""
