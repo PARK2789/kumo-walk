@@ -60,7 +60,7 @@ locations = [
     {
         "name": "석식장소: 버드나무 백숙", 
         "lat": 36.113301, "lon": 128.316201, 
-        "color": "purple", "icon": "flag", 
+        "color": "purple", "icon": "food", 
         "mission": "🎴 **오늘 행사의 마무리를 함께해요"
     }
 
