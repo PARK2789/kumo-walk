@@ -64,7 +64,7 @@ if st.button("카카오맵으로 식당 찾기"):
     st.markdown("[🔗 여기를 클릭하여 지도로 이동](https://map.kakao.com/link/search/구미느티나무백숙)")
 # --- PAGE 2: 조원 명단 확인 ---
 else:
-st.title("👥 조원 명단")
+    st.title("👥 조원 명단")
 st.markdown("### 우리 조 멤버를 확인하세요")
 # 조별 데이터 예시 (성식님이 내용을 수정하시면 됩니다)
 group_info = {
