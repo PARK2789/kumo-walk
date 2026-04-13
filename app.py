@@ -54,7 +54,7 @@ map_out = st_folium(m, width=700, height=400)
 st.markdown("#### 🚩 선택된 지점 미션")
 # 사용자가 마커를 클릭했을 때
 if map_out and map_out.get("last_object_clicked_popup"):
-selected_name = map_out["last_object_clicked_popup"]
+   selected_name = map_out["last_object_clicked_popup"]
 # 데이터 매칭
 found = False
 for loc in locations:
