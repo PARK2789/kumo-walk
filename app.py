@@ -80,6 +80,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_status=True)
 if st.button("🏠 행사 안내로 돌아가기"):
-st.write("사이드바(왼쪽 화살표)에서 메뉴를 변경해 주세요.")
+    st.write("사이드바(왼쪽 화살표)에서 메뉴를 변경해 주세요.")
 # 푸터
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Way Leadership Development</p>", unsafe_allow_status=True)
