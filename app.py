@@ -61,7 +61,7 @@ st.info("추억의 딱지치기! 상대 조의 딱지를 넘기면 점수를 획
 with st.expander("🍴 [식사] 느티나무 백숙"):
     st.write("**주소:** 경북 구미시 금오산상가길 89-12")
 if st.button("카카오맵으로 식당 찾기"):
-st.markdown("[🔗 여기를 클릭하여 지도로 이동](https://map.kakao.com/link/search/구미느티나무백숙)")
+    st.markdown("[🔗 여기를 클릭하여 지도로 이동](https://map.kakao.com/link/search/구미느티나무백숙)")
 # --- PAGE 2: 조원 명단 확인 ---
 else:
 st.title("👥 조원 명단")
