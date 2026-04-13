@@ -1,31 +1,62 @@
 import streamlit as st
 import pandas as pd
-# 1. 설정 및 디자인
-st.set_page_config(page_title="CEO 소통 산책", layout="centered")
-# CSS 스타일 (들여쓰기 없이 한 줄로 처리)
-st.markdown("<style>.stApp { background-color: #F2F2F7; } .ios-card { background-color: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; border: 0.5px solid #E5E5EA; }</style>", unsafe_allow_html=True)
-# 2. 메인 타이틀
-st.title("🏃‍♂️ CEO 소통 산책")
-st.markdown("### 금오산 올레길 코스 가이드")
-# 3. 요약 정보 카드
-st.markdown('<div class="ios-card"><b>📅 일시:</b> 2026. 04. 20 (월) 14:00<br><b>📍 집결:</b> 금오산 잔디광장</div>', unsafe_allow_html=True)
-# 4. 지도 표시
-st.markdown("#### 🗺️ 미션 포인트")
-# 지도 데이터 생성
-map_df = pd.DataFrame({'lat': [36.1083, 36.1105, 36.1130], 'lon': [128.3180, 128.3208, 128.3225]})
-st.map(map_df, zoom=14)
-# 5. 조별 명단 (들여쓰기 없는 단순 텍스트)
+# 1. 페이지 설정 및 iOS 디자인 적용
+st.set_page_config(page_title="CEO 소통 산책", page_icon="🍏", layout="centered")
+st.markdown("""
+<style>
+.stApp { background-color: #F2F2F7; }
+.ios-card {
+background-color: white; padding: 25px; border-radius: 20px;
+box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;
+border: 1px solid #E5E5EA;
+}
+.stButton>button {
+width: 100%; border-radius: 15px; background-color: #007AFF;
+color: white; font-weight: 600; border: none; height: 3.8em;
+}
+h1 { font-weight: 800 !important; color: #1C1C1E !important; letter-spacing: -1px; }
+</style>
+""", unsafe_allow_html=True)
+# 2. 상단 타이틀
+st.title("CEO 소통 산책")
+st.markdown("<p style='color: #8E8E93; font-size: 18px;'>함께 걷는 길, 더 큰 미래</p>", unsafe_allow_html=True)
+# 3. 메뉴 선택 (상단 탭 방식 - 들여쓰기 에러 방지용)
+tab_main, tab_group = st.tabs(["🏠 행사 안내", "👥 조별 진행 확인"])
+with tab_main:
+# 행사 요약 카드
+st.markdown('<div class="ios-card"><p style="color:#007AFF; font-weight:bold; margin:0;">Schedule</p><h2 style="margin:5px 0;">2026. 04. 20 (월) 14:00</h2><p style="color:#8E8E93; margin:0;">금오산 도립공원 잔디광장 집결</p></div>', unsafe_allow_html=True)
+# 인터랙티브 지도 (Activity 장소 표시)
+st.markdown("#### 🗺️ 미션 지점 안내")
+# 금오산 올레길 주요 좌표
+map_data = pd.DataFrame({
+'lat': [36.1085, 36.1105, 36.1135],
+'lon': [128.3185, 128.3205, 128.3235]
+})
+st.map(map_data, zoom=14)
+st.caption("파란색 점: 잔디광장(출발) → 배꼽마당(미션1) → 하트평상(미션2)")
+# 액티비티 상세 가이드
+st.markdown("#### 🚩 액티비티 가이드")
+with st.expander("⚽ [미션 1] 배꼽마당 미니 골든벨"):
+st.write("조원들이 차례대로 미니 골대에 공을 차 넣습니다. 5회 성공 시 미션 완료!")
+with st.expander("🎴 [미션 2] 뚝방길 하트평상 딱지치기"):
+st.write("다른 조와 딱지치기 대결을 펼치세요. 승리 조에게 특별 점수 부여!")
+with st.expander("🍴 [도착] 느티나무 백숙"):
+st.write("주소: 경북 구미시 금오산상가길 89-12")
+if st.button("카카오맵 실행"):
+st.markdown("[🔗 여기를 클릭하여 길찾기 시작](https://map.kakao.com/link/search/구미느티나무백숙)")
+with tab_group:
+st.markdown("### 👥 우리 조 멤버 확인")
+# 조별 데이터 (성식님이 명단을 수정하시면 됩니다)
+group_list = {
+"1조": ["박성식(조장)", "김대리", "이과장", "최사원"],
+"2조": ["홍길동(조장)", "박지민", "이윤지", "정본부"],
+"3조": ["강호동(조장)", "유재석", "신사임당", "이순신"]
+}
+selected = st.selectbox("소속된 조를 선택하세요", list(group_list.keys()))
+# 멤버 표시 카드
+st.markdown(f'<div class="ios-card"><p style="font-size:18px; font-weight:bold; color:#007AFF;">{selected} 멤버 구성</p></div>', unsafe_allow_html=True)
+for member in group_list[selected]:
+st.write(f"👤 {member}")
+# 4. 하단 푸터
 st.divider()
-st.markdown("#### 👥 조원 명단 확인")
-st.info("1조: 박성식(조장), 김철수, 이영희, 최미나\n\n2조: 홍길동(조장), 박지민, 이윤지, 정본부")
-# 6. 미션 상세
-st.divider()
-st.markdown("#### 🚩 미션 안내")
-st.warning("⚽ 미션 1 (배꼽마당): 미니 골대에 공 차 넣기 (5회 성공)")
-st.success("🎴 미션 2 (하트평상): 추억의 딱지치기 조별 대항전")
-# 7. 식당 정보
-st.divider()
-st.markdown("#### 🍴 석식 장소: 느티나무 백숙")
-st.write("주소: 구미시 금오산상가길 89-12")
-st.markdown("[🔗 카카오맵 길찾기 링크](https://map.kakao.com/link/search/구미느티나무백숙)")
-st.caption("© 2026 LG Way Leadership Development")
+st.markdown("<p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Way Leadership Development</p>", unsafe_allow_html=True)
