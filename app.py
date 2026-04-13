@@ -58,9 +58,9 @@ if map_out and map_out.get("last_object_clicked_popup"):
 # 데이터 매칭
 found = False
 for loc in locations:
-if loc["name"] == selected_name:
-   st.info(f"📍 **{loc['name']}**\n\n{loc['desc']}")
-   found = True
+   if loc["name"] == selected_name:
+      st.info(f"📍 **{loc['name']}**\n\n{loc['desc']}")
+      found = True
 break
 else:
    st.warning("지도의 깃발 마커를 클릭해 주세요.")
