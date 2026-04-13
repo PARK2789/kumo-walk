@@ -1,53 +1,86 @@
 import streamlit as st
 import pandas as pd
-# 페이지 설정
-st.set_page_config(page_title="CEO 소통행사 안내", layout="wide")
-# 1. 메인 섹션
-st.title("🏃‍♂️ CEO와 함께하는 금오산 소통 산책")
-st.subheader("'함께 걷는 길, 더 큰 미래'")
-col1, col2 = st.columns(2)
-with col1:
-   # 이 부분이 들여쓰기가 되어 있어야 합니다.
-   st.info("📅 **일시:** 2026년 4월 ○○일(월)\n\n📍 **장소:** 금오산 도립공원 및 올레길")
-with col2:
-   # 이 부분도 마찬가지입니다.
-   st.success("👥 **대상:** 전 임직원 (조별 진행)")
-st.divider()
-# 2. 시간대별 행사 내용 (Timeline)
-st.markdown("### ⏰ 행사 일정")
-schedule = {
-   "시간": ["14:00 - 14:30", "14:30 - 16:30", "16:30 - 18:30"],
-   "내용": ["잔디광장 집결 및 조 편성", "올레길 산책 및 Activity 수행", "석식 및 소통의 시간"]
-}
-st.table(pd.DataFrame(schedule))
-st.divider()
-# 3. 전체 산책 코스 안내
-st.markdown("### 🗺️ 전체 산책 코스")
+# 1. 페이지 설정 및 디자인 커스텀 (iOS 스타일)
+st.set_page_config(page_title="CEO 소통산책", page_icon="🍏", layout="centered")
 st.markdown("""
-**[이동 경로]**
-잔디광장(출발) ➡️ 올레길 입구(좌측 방향) ➡️ 부작교 ➡️ 뚝방길 ➡️ 느티나무 백숙(도착)
-""")
-# 4. 인터랙티브 Activity & 장소 안내
-st.markdown("### 🚩 주요 지점 (탭을 클릭하세요)")
-tab1, tab2, tab3 = st.tabs(["📍 Activity 1", "📍 Activity 2", "🍴 석식 장소"])
-with tab1:
-   st.markdown("#### [배꼽마당] 슈팅! 미니 골든벨")
-   st.write("⚽ **게임 방법:** 조원들이 차례대로 미니 골대에 공을 차 넣습니다.")
-   st.write("🎯 **성공 조건:** 정해진 횟수 이상 골인 시 미션 성공!")
-   if st.button("배꼽마당 위치 확인"):
-       st.info("금오산 올레길 초입 부근 배꼽마당 광장으로 오세요.")
-with tab2:
-   st.markdown("#### [뚝방길 하트평상] 추억의 딱지치기")
-   st.write("🎴 **게임 방법:** 종이 딱지로 상대방의 딱지를 넘기는 게임입니다.")
-   st.write("💪 **성공 조건:** 조 대항 승리 또는 미션 개수 달성!")
-   if st.button("하트평상 위치 확인"):
-       st.info("뚝방길 구간 중간에 위치한 하트 모양 평상을 찾으세요.")
-with tab3:
-   st.markdown("#### [도착지] 느티나무 백숙")
-   st.markdown("**주소:** 경상북도 구미시 금오산상가길 89-12 (남통동)") # 실제 주소 반영 가능
-   st.markdown("**메뉴:** 한방백숙, 닭볶음탕 등")
-   if st.button("식당 정보 상세 보기"):
-       st.success("식당: 느티나무 백숙 / 연락처: 054-452-6126")
-# 5. 하단 안내
-st.divider()
-st.caption("본 웹페이지는 행사 참석자 안내를 위해 제작되었습니다. 문의: 성식님 (인사팀)")
+<style>
+/* 전체 배경색 */
+.stApp { background-color: #F2F2F7; }
+/* 카드 스타일 UI */
+.ios-card {
+background-color: white;
+padding: 20px;
+border-radius: 20px;
+box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+margin-bottom: 15px;
+}
+/* 버튼 스타일 */
+.stButton>button {
+width: 100%;
+border-radius: 15px;
+border: none;
+height: 3.5em;
+font-weight: 600;
+background-color: #007AFF; /* iOS Blue */
+color: white;
+}
+/* 타이틀 감성 */
+h1 { font-weight: 800 !important; color: #1C1C1E !important; }
+h3 { color: #8E8E93 !important; font-size: 16px !important; }
+</style>
+""", unsafe_allow_status=True)
+# 2. 사이드바 / 페이지 전환 로직
+page = st.sidebar.radio("메뉴 이동", ["🏠 행사 안내", "👥 조원 명단 확인"])
+# --- PAGE 1: 행사 안내 ---
+if page == "🏠 행사 안내":
+st.title("CEO 소통 산책")
+st.markdown("### Geumosan Olle-gil Walking")
+# 상단 요약 카드
+st.markdown(f"""
+<div class="ios-card">
+<p style="margin:0; font-size:14px; color:#007AFF; font-weight:bold;">Scedule</p>
+<p style="margin:5px 0; font-size:18px; font-weight:bold;">2026. 04. 20 (월) 14:00</p>
+<p style="margin:0; font-size:14px; color:#8E8E93;">금오산 잔디광장 집결</p>
+</div>
+""", unsafe_allow_status=True)
+# 지도 섹션
+st.markdown("#### 🗺️ 미션 지점 안내")
+# 금오산 올레길 주요 포인트 좌표 (예시 데이터)
+map_data = pd.DataFrame({
+'lat': [36.1085, 36.1105, 36.1135], # 잔디광장, 배꼽마당, 뚝방길
+'lon': [128.3185, 128.3205, 128.3235],
+'name': ['📍 출발: 잔디광장', '⚽ 미션1: 배꼽마당', '🎴 미션2: 하트평상']
+})
+st.map(map_data, zoom=14)
+st.caption("지도상의 위치를 확인하며 이동해 주세요.")
+# 액티비티 상세 (클릭형 버튼)
+st.markdown("#### 🚩 액티비티 가이드")
+with st.expander("⚽ [미션 1] 배꼽마당 미니 골든벨"):
+st.write("조원들이 차례대로 미니 골대에 공을 차 넣습니다. 5회 성공 시 스탬프 획득!")
+with st.expander("🎴 [미션 2] 뚝방길 딱지치기"):
+st.write("하트평상에서 대기 중인 다른 조와 딱지치기 대결을 펼치세요.")
+with st.expander("🍴 [식사] 느티나무 백숙"):
+st.write("경북 구미시 금오산상가길 89-12")
+if st.button("카카오맵 실행"):
+st.write("🔗 [길찾기 링크](https://map.kakao.com/link/search/구미느티나무백숙)")
+# --- PAGE 2: 조원 명단 ---
+else:
+st.title("👥 조원 명단")
+st.markdown("### 우리 조원을 확인해보세요")
+# 예시 데이터 (실제 명단으로 수정 가능)
+group_data = {
+"1조": ["박성식(조장)", "김철수", "이영희", "최미나"],
+"2조": ["정본부", "홍길동", "박지민", "이윤지"],
+"3조": ["이부장", "강호동", "유재석", "신사임당"]
+}
+selected_group = st.selectbox("조를 선택하세요", list(group_data.keys()))
+st.markdown(f"""
+<div class="ios-card">
+<p style="font-size:20px; font-weight:bold; color:#007AFF; margin-bottom:15px;">{selected_group} 멤버</p>
+{"<hr style='border:0.1px solid #F2F2F7;'>".join([f"<p style='margin:10px 0;'>👤 {member}</p>" for member in group_data[selected_group]])}
+</div>
+""", unsafe_allow_status=True)
+if st.button("🏠 메인으로 돌아가기"):
+st.info("왼쪽 메뉴에서 '행사 안내'를 선택해 주세요.")
+# 푸터
+st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Way Leadership Development</p>", unsafe_allow_status=True)
