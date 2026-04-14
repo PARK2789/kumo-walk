@@ -4,7 +4,7 @@ import folium
 from streamlit_folium import st_folium
 
 # 1. 페이지 설정 및 상태 관리
-st.set_page_config(page_title="CEO 소통 산책", page_icon="🍏", layout="centered")
+st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
 if 'page' not in st.session_state:
     st.session_state.page = 'main'
@@ -18,12 +18,12 @@ st.markdown("""
     
     .stApp { background-color: #FFFFFF; font-family: 'Pretendard', sans-serif; }
     
-    /* 1. 초대형 히어로 섹션 */
+    /* 1. 초대형 히어로 섹션 (숲 이미지 적용) */
     .hero-section {
-        background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80&w=1200');
+        background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('uploaded:image.png-1a119860-980c-4143-b380-c5afec04612c');
         background-size: cover;
         background-position: center;
-        padding: 180px 30px 80px 30px; /* 크기 대폭 확대 */
+        padding: 180px 30px 80px 30px;
         border-radius: 0 0 60px 60px;
         color: white;
         text-align: left;
@@ -91,38 +91,38 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. 고정 데이터 정의 (사용자 제공 좌표 및 이미지 테마)
+# 3. 고정 데이터 정의 (사용자 제공 좌표 및 이미지 테마 적용)
 locations = {
     "출발: 잔디광장": {
         "lat": 36.111006, "lon": 128.313156, "color": "green", "icon": "play",
-        "bg": "https://images.unsplash.com/photo-1500382017468-9049fee74a62?q=80&w=1000", # 금오산 조형물 테마
+        "bg": "uploaded:image.png-a59ef2ef-1519-4910-a4db-28ccfc7c771b", # 잔디광장 이미지
         "tag": "STARTING POINT",
         "mission_title": "새로운 연결의 시작",
         "desc": "금오산 도립공원 잔디광장(금오산 조형물 앞)에서 오프닝 행사가 진행됩니다.",
         "details": ["📅 15:30 정시 집결 및 CEO 오프닝", "👥 조별 대항전 가이드북 수령", "🥤 생수 및 간식 키트 증정"],
         "reward": "전원 기념 수건 증정"
     },
-    "미션1: 배꼽마당": {
+    "Activity1: 목표 달성 ‘Goal-In’": {
         "lat": 36.119797, "lon": 128.314458, "color": "blue", "icon": "flag",
-        "bg": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000", # 축구 골대 테마
+        "bg": "uploaded:image.png-08970491-2f12-41f0-8949-1248e486dccd", # 배꼽마당(축구골대) 이미지
         "tag": "ACTIVITY 01",
         "mission_title": "협동 미니 골든벨 슈팅",
         "desc": "조원 전체의 단합력을 테스트합니다. 릴레이 슈팅으로 골인 미션을 완수하세요.",
         "details": ["⚽ 조원 전원 합산 5회 골인", "⏱️ 성공 시간 측정 (가산점 부여)", "🤝 전원 참여 시 추가 점수"],
         "reward": "승리 조 가산점 100점"
     },
-    "미션2: 하트평상": {
+    "Activity2: Bottleneck 타파 ‘딱지 치기’": {
         "lat": 36.119397, "lon": 128.319959, "color": "red", "icon": "flag",
-        "bg": "https://images.unsplash.com/photo-1534073828943-f801091bb18c?q=80&w=1000", # 딱지 테마
+        "bg": "uploaded:image.png-d63d7407-e2ed-4a83-8b3b-56ac98415cce", # 하트평상(딱지) 이미지
         "tag": "ACTIVITY 02",
         "mission_title": "운명의 딱지치기 대결",
         "desc": "둑방길 하트평상에서 펼쳐지는 1:1 진검승부! 상대 조의 딱지를 넘기세요.",
         "details": ["🎴 조별 대표 2인 선발 대결", "🥇 3판 2선승제 토너먼트", "📣 응원 점수 실시간 반영"],
         "reward": "커피 기프티콘 (승리 조)"
     },
-    "버드나무백숙": {
+    "석식:버드나무 백숙": {
         "lat": 36.113301, "lon": 128.316201, "color": "purple", "icon": "cutlery",
-        "bg": "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=1000", # 백숙 테마
+        "bg": "uploaded:image.png-b59bcd96-d091-4848-9c68-daefffb66854", # 버드나무백숙 이미지
         "tag": "DINNER TIME",
         "mission_title": "풍성한 만찬과 소통",
         "desc": "산책의 피로를 풀며 즐기는 건강한 보양식 시간입니다. CEO님과 자유로운 대화가 이어집니다.",
