@@ -1,112 +1,130 @@
+```python
 import streamlit as st
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
 
-# 1. 페이지 설정 및 세션 상태 초기화 (페이지 전환용)
+# 1. 페이지 설정 및 상태 관리 (페이지 전환용)
 st.set_page_config(page_title="CEO 소통 산책", page_icon="🍏", layout="centered")
 
-if 'page' not in st.session_state:
-    st.session_state.page = 'home'
+if 'view' not in st.session_state:
+    st.session_state.view = 'home'
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 2. iOS 프리미엄 스타일 CSS
+# 2. 프리미엄 iOS 디자인 시스템 CSS
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     
-    .stApp { background-color: #F2F2F7; font-family: 'Pretendard', sans-serif; }
+    .stApp { 
+        background-color: #F2F2F7; 
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; 
+    }
     
-    /* 깔끔한 카드 디자인 */
-    .ios-card {
+    /* 카드 디자인 */
+    .premium-card {
         background-color: white; 
         padding: 24px; 
         border-radius: 24px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.04); 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.03); 
         margin-bottom: 20px;
-        border: 1px solid rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.04);
     }
     
-    /* 타이틀 감성 */
-    .main-title { font-weight: 800; font-size: 32px; color: #1C1C1E; letter-spacing: -1.5px; margin-bottom: 4px; }
-    .sub-title { color: #8E8E93; font-size: 16px; margin-bottom: 24px; }
+    /* 헤더 스타일 */
+    .app-header { font-weight: 800; font-size: 34px; color: #1C1C1E; letter-spacing: -1.2px; margin-bottom: 5px; }
+    .app-subtitle { color: #8E8E93; font-size: 17px; margin-bottom: 30px; }
     
-    /* 미션 라벨 */
-    .label-blue { color: #007AFF; font-weight: 700; font-size: 12px; margin-bottom: 6px; display: block; }
-    .label-purple { color: #AF52DE; font-weight: 700; font-size: 12px; margin-bottom: 6px; display: block; }
+    /* 뱃지 및 라벨 */
+    .badge {
+        padding: 5px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        display: inline-block;
+    }
+    .badge-blue { background-color: #E5F1FF; color: #007AFF; }
+    .badge-purple { background-color: #F5E9FF; color: #AF52DE; }
+    .badge-green { background-color: #E8F5E9; color: #34C759; }
     
     /* 버튼 커스텀 */
     .stButton>button {
         width: 100%; border-radius: 16px; background-color: #007AFF;
-        color: white; font-weight: 600; border: none; height: 3.6em;
-        transition: transform 0.1s ease;
+        color: white; font-weight: 600; border: none; height: 3.8em;
+        font-size: 16px; transition: all 0.2s ease;
     }
-    .stButton>button:active { transform: scale(0.97); }
+    .stButton>button:active { transform: scale(0.98); opacity: 0.9; }
     
-    /* 돌아가기 버튼 전용 스타일 */
-    div[data-testid="stButton"] > button.back-btn {
+    /* 돌아가기 버튼 */
+    div[data-testid="stButton"] button:has(div:contains("돌아가기")) {
         background-color: #E5E5EA !important;
         color: #1C1C1E !important;
     }
+
+    /* 정보 텍스트 */
+    .info-title { font-size: 22px; font-weight: 700; color: #1C1C1E; margin-bottom: 8px; }
+    .info-desc { font-size: 16px; color: #3A3A3C; line-height: 1.6; }
 </style>
 """, unsafe_allow_html=True)
 
-# 3. 고정 데이터 정의
+# 3. 데이터 정의 (좌표 고정)
 locations = {
     "출발: 잔디광장": {
         "lat": 36.111006, "lon": 128.313156, "color": "green", "icon": "play",
-        "type": "mission", "tag": "STARTING POINT",
-        "title": "행사 집결 및 출발",
-        "desc": "금오산 도립공원 잔디광장에 집결해 주세요. 조별 명단을 확인하고 CEO님과 함께 소통 산책을 시작합니다.",
-        "tips": ["👟 편안한 신발을 착용하세요.", "🥤 제공된 생수를 꼭 챙기세요.", "📸 조별 단체사진 촬영이 있습니다."]
+        "type": "mission", "badge": "STARTING POINT",
+        "goal": "전 조원 정시 집결 및 CEO 오프닝",
+        "desc": "금오산 도립공원 잔디광장에 집결하여 소통 산책의 시작을 알립니다. CEO님의 격려사와 함께 조별 미션지가 배부됩니다.",
+        "points": ["👟 복장 점검 (운동화 필수)", "🥤 개인별 생수 및 간식 수령", "📸 단체 기념사진 촬영"]
     },
     "미션1: 배꼽마당": {
         "lat": 36.119797, "lon": 128.314458, "color": "blue", "icon": "flag",
-        "type": "mission", "tag": "ACTIVITY 01",
-        "title": "미니 골든벨 슈팅",
-        "desc": "배꼽마당 광장에서 펼쳐지는 첫 번째 관문! 조원들이 순서대로 공을 차서 골대에 넣어야 합니다.",
-        "tips": ["⚽ 조원 합산 5회 성공 시 통과", "⏱️ 성공 시간에 따라 가산점이 부여됩니다."]
+        "type": "mission", "badge": "MISSION 01",
+        "goal": "협동 미니 골든벨 슈팅",
+        "desc": "조원 전체의 단합력을 테스트하는 첫 번째 미션입니다. 지정된 구역에서 공을 차 골대에 넣는 릴레이 미션입니다.",
+        "points": ["⚽ 조원 합산 5회 골인 성공", "⏱️ 기록에 따른 차등 점수 부여", "🤝 조원 간 응원 점수 추가 반영"]
     },
     "미션2: 뚝방길 하트평상": {
         "lat": 36.119397, "lon": 128.319959, "color": "red", "icon": "flag",
-        "type": "mission", "tag": "ACTIVITY 02",
-        "title": "추억의 딱지치기",
-        "desc": "둑방길을 따라 걷다 보면 나오는 하트평상! 대기 중인 다른 조와 운명의 대결을 펼치세요.",
-        "tips": ["🎴 조별 대표 2인이 출전합니다.", "🏆 승리 조에게는 저녁 식사 시 보너스 권이 증정됩니다."]
+        "type": "mission", "badge": "MISSION 02",
+        "goal": "운명의 딱지치기 대결",
+        "desc": "풍경이 아름다운 뚝방길 하트평상 미션지! 대기 중인 운영진 혹은 다른 조와 펼치는 1:1 딱지치기 토너먼트입니다.",
+        "points": ["🎴 조별 대표 2인 선발", "🥇 3판 2선승제 대결", "🎁 승리 조 전원에게 커피 쿠폰 증정"]
     },
     "버드나무백숙": {
         "lat": 36.113301, "lon": 128.316201, "color": "purple", "icon": "cutlery",
-        "type": "food", "tag": "DINNER TIME",
-        "title": "즐거운 저녁 식사",
-        "desc": "산책 후 즐기는 맛있는 백숙 타임! CEO님과 자유롭게 대화하며 오늘 하루를 마무리하는 자리입니다.",
-        "tips": ["🍗 메뉴: 한방 백숙 및 도토리묵", "⏰ 18:00부터 식사가 시작됩니다."]
+        "type": "food", "badge": "DINNER",
+        "title": "풍성한 저녁 식사 및 소통",
+        "desc": "금오산 맛집 '버드나무백숙'에서 즐기는 건강한 저녁 식사 시간입니다. 산책의 피로를 풀며 자유롭게 CEO님과 대화하는 자리입니다.",
+        "points": ["🍗 주메뉴: 한방 능이 백숙", "💬 CEO 소통 Q&A 및 경품 추첨", "⏰ 18:00 식사 시작"]
     }
 }
 
-# --- 로직: 페이지 전환 함수 ---
-def nav_to(page, target=None):
-    st.session_state.page = page
+# --- 로직: 내비게이션 함수 ---
+def navigate_to(page, target=None):
+    st.session_state.view = page
     st.session_state.target = target
     st.rerun()
 
-# --- 화면 1: 메인 홈 화면 ---
-if st.session_state.page == 'home':
-    st.markdown('<div class="main-title">CEO 소통 산책</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">금오산 올레길: 함께 걷는 길, 더 큰 미래</div>', unsafe_allow_html=True)
+# --- 화면 1: 홈 (지도 및 요약) ---
+if st.session_state.view == 'home':
+    st.markdown('<h1 class="app-header">CEO 소통 산책</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="app-subtitle">금오산 올레길: 함께 걷는 길, 더 큰 미래</p>', unsafe_allow_html=True)
 
-    # 상단 요약 카드
+    # 일정 정보 카드
     st.markdown("""
-    <div class="ios-card">
-        <span class="label-blue">Schedule</span>
-        <div style="font-size:20px; font-weight:700;">2026. 04. 23 (목) 15:30</div>
-        <div style="color:#8E8E93; font-size:14px; margin-top:4px;">📍 금오산 도립공원 잔디광장 집결</div>
+    <div class="premium-card">
+        <span class="badge badge-blue">Upcoming Event</span>
+        <div class="info-title">2026. 04. 23 (목) 15:30</div>
+        <p style="color:#8E8E93; margin:0; font-size:15px;">📍 금오산 도립공원 잔디광장 집결</p>
     </div>
     """, unsafe_allow_html=True)
 
     # 지도 섹션
-    st.markdown("#### 🗺️ 올레길 코스 지도")
-    st.caption("지도 위의 마커를 클릭하면 상세 페이지로 이동합니다.")
+    st.markdown("#### 🗺️ 코스 지도")
+    st.caption("지도 위의 마커를 터치하여 미션 상세 내용을 확인하세요.")
     
     m = folium.Map(location=[36.1150, 128.3160], zoom_start=15, tiles="cartodbpositron")
     for name, info in locations.items():
@@ -116,56 +134,59 @@ if st.session_state.page == 'home':
             icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')
         ).add_to(m)
 
-    map_data = st_folium(m, width="100%", height=380)
+    map_res = st_folium(m, width="100%", height=380)
 
-    # 마커 클릭 시 페이지 이동
-    if map_data and map_data.get("last_object_clicked_popup"):
-        clicked_name = map_data["last_object_clicked_popup"]
+    # 클릭 시 페이지 이동
+    if map_res and map_res.get("last_object_clicked_popup"):
+        clicked_name = map_res["last_object_clicked_popup"]
         if clicked_name in locations:
-            nav_to('detail', clicked_name)
+            navigate_to('detail', clicked_name)
 
     # 조원 확인 카드
     st.divider()
     st.markdown("#### 👥 우리 조원 확인")
-    selected_group = st.selectbox("소속 조를 선택하세요", ["선택 안함", "1조", "2조", "3조"], label_visibility="collapsed")
-    group_info = {
-        "1조": "박성식(조장), 김대리, 이과장, 최사원",
-        "2조": "홍길동(조장), 이팀장, 박주임, 정사원",
-        "3조": "강본부(조장), 유재석, 신사임당, 조대리"
-    }
-    if selected_group != "선택 안함":
-        st.markdown(f'<div class="ios-card" style="margin-top:10px; border-left: 5px solid #007AFF;"><b>{selected_group} 멤버:</b><br>{group_info[selected_group]}</div>', unsafe_allow_html=True)
+    with st.container():
+        group = st.selectbox("소속 조를 선택하세요", ["선택 안함", "1조", "2조", "3조"], label_visibility="collapsed")
+        group_data = {
+            "1조": "박성식(조장), 김대리, 이과장, 최사원",
+            "2조": "홍길동(조장), 이팀장, 박주임, 정사원",
+            "3조": "강본부(조장), 유재석, 신사임당, 조대리"
+        }
+        if group != "선택 안함":
+            st.markdown(f'<div class="premium-card" style="margin-top:10px; border-left: 6px solid #007AFF;"><b>{group} 인원:</b><br>{group_data[group]}</div>', unsafe_allow_html=True)
 
-# --- 화면 2: 상세 미션/장소 화면 ---
-elif st.session_state.page == 'detail':
-    target_name = st.session_state.target
-    data = locations[target_name]
+# --- 화면 2: 미션 상세 페이지 ---
+elif st.session_state.view == 'detail':
+    name = st.session_state.target
+    info = locations[name]
     
-    # 상단 내비게이션 (뒤로가기)
-    if st.button("← 메인 화면으로 돌아가기", key="back_btn"):
-        nav_to('home')
+    # 상단 뒤로가기 버튼
+    if st.button("← 메인으로 돌아가기"):
+        navigate_to('home')
 
-    st.markdown(f'<div class="main-title" style="margin-top:20px;">{target_name}</div>', unsafe_allow_html=True)
+    st.markdown(f'<h1 class="app-header" style="margin-top:25px;">{name}</h1>', unsafe_allow_html=True)
     
-    # 상세 내용 카드
-    label_class = "label-purple" if data['type'] == "food" else "label-blue"
+    # 메인 정보 카드
+    badge_style = "badge-purple" if info['type'] == "food" else "badge-blue"
     st.markdown(f"""
-    <div class="ios-card">
-        <span class="{label_class}">{data['tag']}</span>
-        <div style="font-size:24px; font-weight:700; margin-bottom:12px;">{data['title']}</div>
-        <div style="color:#3A3A3C; line-height:1.6; font-size:16px;">{data['desc']}</div>
+    <div class="premium-card">
+        <span class="badge {badge_style}">{info['badge']}</span>
+        <div class="info-title">{info.get('goal', info.get('title'))}</div>
+        <p class="info-desc">{info['desc']}</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # 추가 안내 가이드 (카드 형태)
-    st.markdown("#### 💡 진행 안내")
-    for tip in data['tips']:
-        st.markdown(f'<div class="ios-card" style="padding:16px; margin-bottom:10px; border-radius:18px;">{tip}</div>', unsafe_allow_html=True)
+    # 체크리스트/포인트 카드들
+    st.markdown("#### 📋 상세 안내")
+    for point in info['points']:
+        st.markdown(f'<div class="premium-card" style="padding:18px; margin-bottom:12px; border-radius:18px;">{point}</div>', unsafe_allow_html=True)
 
-    # 길찾기 버튼
+    # 하단 액션 버튼
     st.divider()
-    if st.button("📍 이 장소로 길찾기 (카카오맵)"):
-        st.markdown(f"[클릭하여 지도로 이동](https://map.kakao.com/link/search/{target_name})")
+    if st.button("📍 이 지점으로 길찾기 (카카오맵)"):
+        st.markdown(f"https://map.kakao.com/link/search/{name}")
 
-# 공통 푸터
+# 푸터
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
+
+```
