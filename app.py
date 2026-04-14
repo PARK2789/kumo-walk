@@ -168,5 +168,4 @@ elif st.session_state.page == 'detail':
         st.markdown(f"[클릭하여 지도로 이동](https://map.kakao.com/link/search/{target_name})")
 
 # 공통 푸터
-st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Way Leadership Development</p>", unsafe_allow_html=True)
-
+st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
