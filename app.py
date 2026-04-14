@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import folium
@@ -28,23 +29,24 @@ img_soccer = get_base64_img("soccer.jpg")
 img_ddakji = get_base64_img("ddakji.jpg")
 img_food = get_base64_img("food.jpg")
 
-# 3. GPX 데이터 파싱 (금오산_올레길_대세산.gpx 파일에서 좌표 추출)
-def get_gpx_path(file_path):
-    points = []
-    if os.path.exists(file_path):
-        tree = ET.parse(file_path)
-        root = tree.getroot()
-        # GPX 네임스페이스 처리
-        ns = {'default': 'http://www.topografix.com/GPX/1/1'}
-        for trkpt in root.findall('.//default:trkpt', ns):
-            lat = float(trkpt.get('lat'))
-            lon = float(trkpt.get('lon'))
-            points.append([lat, lon])
-    return points
+# 3. GPX 데이터 정밀 파싱 (보내주신 파일에서 실제 좌표 추출)
+def extract_gpx_coords(file_name):
+    coords = []
+    if os.path.exists(file_name):
+        try:
+            tree = ET.parse(file_name)
+            root = tree.getroot()
+            # GPX standard namespace
+            ns = {'default': 'http://www.topografix.com/GPX/1/1'}
+            for trkpt in root.findall('.//default:trkpt', ns):
+                coords.append([float(trkpt.get('lat')), float(trkpt.get('lon'))])
+        except: pass
+    return coords
 
-olle_trail_path = get_gpx_path("금오산_올레길(대세산).gpx")
+# 실제 경로 데이터 (GPX 파일명 일치 필요)
+olle_path = extract_gpx_coords("금오산_올레길(대세산).gpx")
 
-# 4. 프리미엄 디자인 CSS (요청하신 대로 이미지 풀 적용 및 텍스트 군더더기 제거)
+# 4. 프리미엄 디자인 CSS (이미지 풀 적용 및 중복 제거)
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
 st.markdown(f"""
@@ -54,25 +56,29 @@ st.markdown(f"""
     
     /* 웅장한 히어로 섹션 */
     .hero-section {{
-        background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('{hero_bg}');
+        background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
-        padding: 180px 30px 80px 30px; border-radius: 0 0 50px 50px;
+        padding: 180px 30px 80px 30px; border-radius: 0 0 60px 60px;
         color: white; text-align: left; margin: -6rem -2rem 2.5rem -2rem;
     }}
     .hero-title {{ font-weight: 900; font-size: 52px; line-height: 1.1; letter-spacing: -2.5px; }}
 
-    /* 프로그램 카드 - 이미지가 잘리지 않도록 풀사이즈 적용 */
+    /* 프로그램 카드 - 이미지가 잘리지 않고 전체를 덮도록 (dotcle 스타일) */
     .program-card {{
-        width: 100%; border-radius: 35px; overflow: hidden;
-        background-color: #F8F9FA; border: 1px solid #E5E5EA;
-        margin-bottom: 30px; transition: transform 0.2s ease;
+        position: relative; height: 300px; border-radius: 40px;
+        margin-bottom: 25px; overflow: hidden; background-size: cover;
+        background-position: center; display: flex; flex-direction: column;
+        justify-content: flex-end; padding: 40px; color: white;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     }}
-    .program-img {{
-        width: 100%; height: 260px; background-size: cover; background-position: center;
+    .card-overlay {{
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%);
+        z-index: 1;
     }}
-    .program-info {{ padding: 25px 30px; }}
-    .program-tag {{ font-size: 13px; font-weight: 700; color: #007AFF; margin-bottom: 5px; text-transform: uppercase; }}
-    .program-name {{ font-size: 24px; font-weight: 800; color: #1C1C1E; margin-bottom: 15px; letter-spacing: -0.8px; }}
+    .card-content {{ position: relative; z-index: 2; pointer-events: none; }}
+    .card-tag {{ font-size: 14px; font-weight: 700; color: #FFFFFF; opacity: 0.9; margin-bottom: 6px; letter-spacing: 1px; }}
+    .card-title {{ font-size: 28px; font-weight: 800; letter-spacing: -1.2px; color: #FFFFFF; }}
 
     /* 조원 결과 박스 */
     .member-box {{
@@ -82,14 +88,14 @@ st.markdown(f"""
 
     /* 버튼 스타일 */
     .stButton>button {{
-        width: 100%; border-radius: 18px; background-color: #1C1C1E;
+        width: 100%; border-radius: 20px; background-color: #1C1C1E;
         color: white; font-weight: 600; border: none; height: 3.8em; font-size: 16px;
     }}
     .back-btn button {{ background-color: #F2F2F7 !important; color: #1C1C1E !important; }}
 </style>
 """, unsafe_allow_html=True)
 
-# 5. 데이터 정의 (요청 명칭 고정)
+# 5. 데이터 정의
 locations = {
     "잔디광장": {
         "lat": 36.111006, "lon": 128.313156, "color": "green", "icon": "play",
@@ -123,17 +129,17 @@ def navigate_to(view, target=None):
     st.session_state.target = target
     st.rerun()
 
-# --- 화면 1: 홈 (Main) ---
+# --- 화면 1: 홈 (Home) ---
 if st.session_state.view == 'home':
-    # 상단 히어로 섹션
+    # 히어로 섹션
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk<sup>+</sup></div>
-        <div style="font-size: 20px; opacity: 0.9; margin-top: 15px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
+        <div style="font-size: 20px; opacity: 0.9; margin-top: 15px;">금오산 올레길의 정취를 느끼며,<br>함께 걷는 우리의 미래.</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 1. 조원 확인
+    # 1. 조원 확인 (지도 위 배치)
     st.markdown("#### 👥 우리 조원 확인")
     try:
         df_members = pd.read_csv("members.csv")
@@ -144,15 +150,15 @@ if st.session_state.view == 'home':
     except:
         st.warning("members.csv 파일을 확인해 주세요.")
 
-    # 2. 정밀 지도 섹션 (GPX 데이터 100% 반영)
+    # 2. 정밀 지도 섹션 (GPX 데이터 반영)
     st.markdown("#### 🗺️ 올레길 산책 코스")
-    st.caption("파란색 실선은 GPX 데이터를 바탕으로 한 실제 산책로입니다. 마커를 클릭하세요.")
+    st.caption("파란색 실선은 GPX 데이터를 바탕으로 한 실제 산책로입니다.")
     
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     
-    # GPX 경로 표시
-    if olle_trail_path:
-        folium.PolyLine(locations=olle_trail_path, color="#007AFF", weight=6, opacity=0.85).add_to(m)
+    # GPX 경로를 점선(Dashed Line) 스타일로 입혀 가시성 확보
+    if olle_path:
+        folium.PolyLine(locations=olle_path, color="#007AFF", weight=7, opacity=0.85).add_to(m)
     
     for name, info in locations.items():
         folium.Marker(
@@ -160,21 +166,21 @@ if st.session_state.view == 'home':
             icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')
         ).add_to(m)
         
-    map_res = st_folium(m, width="100%", height=380)
+    map_res = st_folium(m, width="100%", height=400)
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked = map_res["last_object_clicked_popup"]
         if clicked in locations: navigate_to('detail', clicked)
 
-    # 3. 프로그램 상세 리스트 (이미지 풀 레이아웃 및 접두사 제거)
-    st.markdown('<h4 style="margin-top:40px; margin-bottom:25px;">🚩 프로그램 상세 가이드</h4>', unsafe_allow_html=True)
+    # 3. 프로그램 리스트 (이미지 풀 적용 및 접두사 제거)
+    st.markdown('<h4 style="margin-top:50px; margin-bottom:25px;">🚩 프로그램 상세 정보</h4>', unsafe_allow_html=True)
     for name, info in locations.items():
         bg_url = f"data:image/jpeg;base64,{info['bg']}" if info['bg'] else ""
         st.markdown(f"""
-        <div class="program-card">
-            <div class="program-img" style="background-image: url('{bg_url}');"></div>
-            <div class="program-info">
-                <div class="program-tag">{info['tag']}</div>
-                <div class="program-name">{name}</div>
+        <div class="program-card" style="background-image: url('{bg_url}');">
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-tag">{info['tag']}</div>
+                <div class="card-title">{name}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -201,11 +207,11 @@ elif st.session_state.view == 'detail':
             <div style="font-size: 38px; font-weight: 900; letter-spacing: -1.5px;">{name}</div>
         </div>
     </div>
-    <div style="background-color: #F8F9FA; padding: 35px; border-radius: 35px; border: 1px solid #E5E5EA; margin-top:20px;">
+    <div style="background-color: #F8F9FA; padding: 35px; border-radius: 30px; border: 1px solid #E5E5EA; margin-top:20px;">
         <h3 style="margin-top:0; font-weight:800;">{item['title']}</h3>
         <p style="font-size: 18px; color: #3A3A3C; line-height: 1.7;">{item['desc']}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 30px 0;">
-        <h5 style="margin-top:0; font-weight:800;">📝 상세 안내</h5>
+        <h5 style="margin-top:0; font-weight:800;">📝 상세 가이드</h5>
         {"".join([f'<div style="margin-bottom:12px; font-size:16px;">✅ {p}</div>' for p in item['points']])}
     </div>
     """, unsafe_allow_html=True)
@@ -213,6 +219,7 @@ elif st.session_state.view == 'detail':
     if st.button("📍 이 지점 길찾기 (카카오맵)"):
         st.markdown(f"https://map.kakao.com/link/search/{name}")
 
-# 푸터 (2026 LG Innotek Talent Development Team)
+# 푸터 수정 (2026 LG Innotek Talent Development Team)
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
 
+```
