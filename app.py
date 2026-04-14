@@ -47,7 +47,7 @@ def parse_gpx_file(file_name):
     return path_points
 
 # 파일명 "금오산_올레길(대세산).gpx"이 저장소에 있어야 합니다.
-actual_olle_path = parse_gpx_file("금오산_올레길(대세산).gpx")
+actual_olle_path = parse_gpx_file("좌표.gpx")
 
 # 4. 프리미엄 디자인 CSS (이미지 전체 적용 및 중복 제거)
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
