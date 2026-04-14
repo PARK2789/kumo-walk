@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 import folium
@@ -215,4 +214,3 @@ elif st.session_state.view == 'detail':
 # 푸터 수정 (2026 LG Innotek Talent Development Team)
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
 
-```
