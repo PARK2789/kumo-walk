@@ -92,25 +92,25 @@ olle_actual_path = [
 ]
 
 locations = {
-    "출발: 잔디광장": {
+    "잔디광장": {
         "lat": 36.111006, "lon": 128.313156, "color": "green", "icon": "play",
         "bg": img_grass, "tag": "STARTING POINT",
         "title": "새로운 연결의 시작", "desc": "금오산 도립공원 잔디광장에서 CEO님과 함께하는 오프닝 행사가 진행됩니다.",
         "points": ["📅 15:30까지 필히 집결", "👥 조별 대항전 가이드 수령", "🥤 생수 및 간식 키트 수령"]
     },
-    "Activity1 : 목표달성 ’Goal-In’": {
+    "목표달성 ’Goal-In’": {
         "lat": 36.119797, "lon": 128.314458, "color": "blue", "icon": "flag",
         "bg": img_soccer, "tag": "ACTIVITY 01",
         "title": "협동 미니 골든벨 슈팅", "desc": "조원 전체의 단합력을 테스트합니다. 릴레이 슈팅으로 골인 미션을 완수하세요.",
         "points": ["⚽ 조원 합산 5회 골인 성공", "⏱️ 성공 시간 기록 측정", "🤝 조원 간 응원 점수 반영"]
     },
-    "Activity2 : Bottleneck 타파 ’딱지치기’": {
+    "Bottleneck 타파 ’딱지치기’": {
         "lat": 36.119397, "lon": 128.319959, "color": "red", "icon": "flag",
         "bg": img_ddakji, "tag": "ACTIVITY 02",
         "title": "운명의 딱지치기 대결", "desc": "둑방길 하트평상에서 펼쳐지는 다른 조와의 1:1 진검승부!",
         "points": ["🎴 조별 대표 2인 선발", "🥇 3판 2선승제 토너먼트", "🎁 승리 조 커피 기프티콘 증정"]
     },
-    "석식 : 버드나무 백숙": {
+    "버드나무 백숙": {
         "lat": 36.113301, "lon": 128.316201, "color": "purple", "icon": "cutlery",
         "bg": img_food, "tag": "DINNER TIME",
         "title": "풍성한 만찬과 소통", "desc": "산책의 피로를 풀며 즐기는 건강한 보양식 시간입니다. CEO님과 자유롭게 대화하세요.",
