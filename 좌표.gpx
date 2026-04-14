@@ -1,16 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<gpx creator="Ramblr - http://www.ramblr.com" version="1.1" xmlns="http://www.topografix.com/GPX/1/1">
-<metadata>
-<name>좌표</name>
-<desc>Bientus, Inc. - www.ramblr.com - Share your outdoor stories on a map!</desc>
-<author>
-<name>좌표</name>
-</author>
-<link href="https://www.ramblr.com/web/mymap/trip/655458/10201207"></link>
-<time>2025-09-25T21:58:17Z</time>
-</metadata>
-<trk>
-<name>좌표</name>
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<gpx version="1.1" creator="com.ngt.android.nadeuli" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/gpx/1/1/gpx.xsd" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gpx10="http://www.topografix.com/GPX/1/0">
+<metadata><time>2025-04-29T02:33:22Z</time></metadata>
+<trk><name>좌표</name>
 <trkseg>
 <trkpt lat="36.11990000" lon="128.31411667"><ele>121.50</ele><time>2025-09-25T21:58:18Z</time></trkpt>
 <trkpt lat="36.11985333" lon="128.31420667"><ele>112.10</ele><time>2025-09-25T21:58:31Z</time></trkpt>
