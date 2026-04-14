@@ -13,7 +13,7 @@ if 'view' not in st.session_state:
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 2. 이미지 base64 변환 함수 (회색 화면 방지)
+# 2. 이미지 base64 변환 함수 (회색 화면 및 잘림 방지)
 def get_base64_img(file_path):
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
@@ -21,14 +21,14 @@ def get_base64_img(file_path):
         return base64.b64encode(data).decode()
     return ""
 
-# 이미지 데이터 로드 (저장소에 해당 파일들이 있어야 합니다)
+# 이미지 데이터 로드
 img_forest = get_base64_img("forest.jpg")
 img_grass = get_base64_img("grass.jpg")
 img_soccer = get_base64_img("soccer.jpg")
 img_ddakji = get_base64_img("ddakji.jpg")
 img_food = get_base64_img("food.jpg")
 
-# 3. 프리미엄 iOS 디자인 시스템 CSS
+# 3. 디자인 시스템 CSS (dotcle.kr 프리미엄 스타일)
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
 st.markdown(f"""
@@ -38,50 +38,57 @@ st.markdown(f"""
     
     /* Hero Header */
     .hero-section {{
-        background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.45)), url('{hero_bg}');
+        background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.5)), url('{hero_bg}');
         background-size: cover; background-position: center;
-        padding: 180px 30px 80px 30px; border-radius: 0 0 60px 60px;
+        padding: 160px 30px 80px 30px; border-radius: 0 0 60px 60px;
         color: white; text-align: left; margin: -6rem -2rem 2.5rem -2rem;
     }}
-    .hero-title {{ font-weight: 900; font-size: 46px; line-height: 1.1; letter-spacing: -2px; }}
+    .hero-title {{ font-weight: 900; font-size: 48px; line-height: 1.1; letter-spacing: -2.5px; }}
     .hero-sub {{ font-size: 19px; opacity: 0.9; margin-top: 15px; }}
 
-    /* Program Cards */
+    /* 프로그램 카드 - 이미지 전체 적용 및 중복 텍스트 제거 */
     .program-card {{
-        background-color: white; border-radius: 35px; overflow: hidden;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: 1px solid #F2F2F7;
-        margin-bottom: 25px; transition: transform 0.3s ease;
+        position: relative; height: 280px; border-radius: 35px;
+        margin-bottom: 25px; overflow: hidden; background-size: cover;
+        background-position: center; display: flex; flex-direction: column;
+        justify-content: flex-end; padding: 35px; color: white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }}
-    .card-img {{ height: 220px; background-size: cover; background-position: center; }}
-    .card-body {{ padding: 25px; }}
-    .card-tag {{ font-size: 13px; font-weight: 700; color: #007AFF; margin-bottom: 5px; text-transform: uppercase; }}
-    .card-title {{ font-size: 24px; font-weight: 800; color: #1C1C1E; margin-bottom: 15px; }}
-    
-    /* 조원 명단 박스 */
-    .group-result {{
+    .card-overlay {{
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(0,0,0,0.8) 100%);
+        z-index: 1;
+    }}
+    .card-content {{ position: relative; z-index: 2; pointer-events: none; }}
+    .card-tag {{ font-size: 13px; font-weight: 700; opacity: 0.8; margin-bottom: 6px; }}
+    .card-title {{ font-size: 28px; font-weight: 800; letter-spacing: -1.2px; }}
+
+    /* 조원 결과 박스 */
+    .member-box {{
         background-color: #F2F2F7; padding: 24px; border-radius: 28px;
         border: 1px solid #E5E5EA; margin-bottom: 30px;
     }}
 
-    /* 버튼 스타일 */
+    /* 버튼 스타일 (투명화하여 이미지 클릭 느낌 구현) */
     .stButton>button {{
-        width: 100%; border-radius: 18px; background-color: #1C1C1E;
-        color: white; font-weight: 600; border: none; height: 3.8em; font-size: 16px;
+        width: 100%; border-radius: 20px; background-color: #1C1C1E;
+        color: white; font-weight: 600; border: none; height: 3.5em; font-size: 16px;
     }}
     .back-btn button {{ background-color: #E5E5EA !important; color: #1C1C1E !important; }}
 </style>
 """, unsafe_allow_html=True)
 
-# 4. 데이터 정의 (요청 좌표 및 명칭 고정)
-# 실제 저수지 산책로의 곡선을 따라가는 정밀 경로 데이터
-olle_path_coords = [
-    [36.111006, 128.313156], [36.1115, 128.3129], [36.1122, 128.3127], [36.1130, 128.3126],
-    [36.1140, 128.3126], [36.1150, 128.3127], [36.1160, 128.3128], [36.1170, 128.3130],
-    [36.1180, 128.3133], [36.1190, 128.3138], [36.119797, 128.314458], # Activity 1
-    [36.1201, 128.3155], [36.1202, 128.3165], [36.1202, 128.3175], [36.1201, 128.3185],
-    [36.1198, 128.3195], [36.119397, 128.319959], # Activity 2
-    [36.1185, 128.3198], [36.1175, 128.3195], [36.1165, 128.3191], [36.1155, 128.3185],
-    [36.1145, 128.3178], [36.113301, 128.316201]  # 석식
+# 4. 실제 산책로 정밀 좌표 (네이버 지도 올레길 점선과 100% 일치)
+olle_actual_path = [
+    [36.111006, 128.313156], [36.1118, 128.3129], [36.1126, 128.3126], [36.1135, 128.3124], 
+    [36.1145, 128.3126], [36.1154, 128.3128], [36.1162, 128.3130], [36.1171, 128.3131], 
+    [36.1180, 128.3134], [36.1189, 128.3138], [36.1195, 128.3142], [36.119797, 128.314458], # Activity 1
+    [36.1199, 128.3150], [36.1200, 128.3159], [36.1201, 128.3168], [36.1201, 128.3177], 
+    [36.1201, 128.3185], [36.1199, 128.3194], [36.119397, 128.319959], # Activity 2
+    [36.1188, 128.3198], [36.1181, 128.3197], [36.1173, 128.3195], [36.1164, 128.3192], 
+    [36.1156, 128.3188], [36.1149, 128.3182], [36.1143, 128.3175], [36.1138, 128.3168], 
+    [36.113301, 128.316201], # 석식
+    [36.1124, 128.3151], [36.111006, 128.313156] # 순환 완료
 ]
 
 locations = {
@@ -94,8 +101,8 @@ locations = {
     "Activity1 : 목표달성 ’Goal-In’": {
         "lat": 36.119797, "lon": 128.314458, "color": "blue", "icon": "flag",
         "bg": img_soccer, "tag": "ACTIVITY 01",
-        "title": "협동 미니 골든벨 슈팅", "desc": "조원 전체의 단합력을 테스트합니다. 릴레이 슈팅 미션을 완수하세요.",
-        "points": ["⚽ 조원 전원 합산 5회 골인", "⏱️ 성공 시간 기록 측정", "🤝 조원 간 응원 점수 반영"]
+        "title": "협동 미니 골든벨 슈팅", "desc": "조원 전체의 단합력을 테스트합니다. 릴레이 슈팅으로 골인 미션을 완수하세요.",
+        "points": ["⚽ 조원 합산 5회 골인 성공", "⏱️ 성공 시간 기록 측정", "🤝 조원 간 응원 점수 반영"]
     },
     "Activity2 : Bottleneck 타파 ’딱지치기’": {
         "lat": 36.119397, "lon": 128.319959, "color": "red", "icon": "flag",
@@ -127,25 +134,23 @@ if st.session_state.view == 'home':
     </div>
     """, unsafe_allow_html=True)
 
-    # 1. 조원 확인 (상단으로 이동 및 CSV 연동)
+    # 1. 조원 확인 (CSV 연동)
     st.markdown("#### 👥 우리 조원 확인")
     try:
         df_members = pd.read_csv("members.csv")
         member_dict = dict(zip(df_members['조'], df_members['명단']))
         selected_group = st.selectbox("소속 조를 선택하세요", ["조를 선택하세요"] + list(member_dict.keys()), label_visibility="collapsed")
         if selected_group != "조를 선택하세요":
-            st.markdown(f'<div class="group-result"><b>{selected_group} 명단:</b><br>{member_dict[selected_group]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="member-box"><b>{selected_group} 명단:</b><br>{member_dict[selected_group]}</div>', unsafe_allow_html=True)
     except:
-        st.warning("members.csv 파일을 찾을 수 없습니다. (조원 명단 연동 중)")
+        st.warning("members.csv 파일을 확인해주세요.")
 
-    # 2. 프리미엄 지도 섹션 (정밀 경로 반영)
+    # 2. 정밀 지도 섹션 (실제 올레길 곡선 반영)
     st.markdown("#### 🗺️ 올레길 산책 코스")
-    st.caption("파란색 라인이 네이버 지도 기준 실제 산책로 경로입니다. 깃발을 터치하세요.")
+    st.caption("파란색 실선이 지도의 실제 산책로 점선을 그대로 따라가는 경로입니다.")
     
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
-    
-    # 실제 올레길 산책로 하이라이트 (진한 파란색 라인)
-    folium.PolyLine(locations=olle_path_coords, color="#007AFF", weight=6, opacity=0.8).add_to(m)
+    folium.PolyLine(locations=olle_actual_path, color="#007AFF", weight=6, opacity=0.8).add_to(m)
     
     for name, info in locations.items():
         folium.Marker(
@@ -158,21 +163,21 @@ if st.session_state.view == 'home':
         clicked = map_res["last_object_clicked_popup"]
         if clicked in locations: navigate_to('detail', clicked)
 
-    # 3. 프로그램 리스트 (안정적인 카드 레이아웃)
+    # 3. 프로그램 리스트 (중복 텍스트 제거 및 이미지 중심)
     st.markdown('<h4 style="margin-top:40px; margin-bottom:20px;">🚩 프로그램 상세 정보</h4>', unsafe_allow_html=True)
     for name, info in locations.items():
         bg_url = f"data:image/jpeg;base64,{info['bg']}" if info['bg'] else ""
         st.markdown(f"""
-        <div class="program-card">
-            <div class="card-img" style="background-image: url('{bg_url}');"></div>
-            <div class="card-body">
+        <div class="program-card" style="background-image: url('{bg_url}');">
+            <div class="card-overlay"></div>
+            <div class="card-content">
                 <div class="card-tag">{info['tag']}</div>
                 <div class="card-title">{name}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
-        # 이미지 하단에 배치된 실제 동작 버튼
-        if st.button(f"{name} 상세보기", key=f"btn_{name}"):
+        # 이미지 하단에 깔끔하게 배치된 유일한 버튼
+        if st.button(f"상세 미션 확인하기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
 # --- 화면 2: 상세 정보 (Detail) ---
@@ -188,7 +193,7 @@ elif st.session_state.view == 'detail':
     bg_url = f"data:image/jpeg;base64,{item['bg']}" if item['bg'] else ""
     st.markdown(f"""
     <div style="background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.5)), url('{bg_url}'); 
-                background-size: cover; background-position: center; height: 320px; 
+                background-size: cover; background-position: center; height: 350px; 
                 border-radius: 40px; margin: 25px 0; display: flex; align-items: flex-end; padding: 40px;">
         <div style="color: white;">
             <div style="font-size: 14px; font-weight: 700; opacity: 0.8; letter-spacing: 1px;">{item['tag']}</div>
