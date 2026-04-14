@@ -13,7 +13,7 @@ if 'page' not in st.session_state:
 if 'selected_item' not in st.session_state:
     st.session_state.selected_item = None
 
-# 2. 이미지 base64 변환 (로컬 이미지 로드용)
+# 2. 이미지 base64 변환 (로컬 이미지 로드 및 회색 화면 방지)
 def get_base64_img(file_path):
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
@@ -21,7 +21,7 @@ def get_base64_img(file_path):
         return base64.b64encode(data).decode()
     return ""
 
-# 이미지 파일 로드 (파일명은 실제 저장소 파일명과 일치해야 합니다)
+# 파일명 매칭 (저장소에 이 이름들로 파일이 있어야 함)
 img_forest = get_base64_img("forest.jpg")
 img_grass = get_base64_img("grass.jpg")
 img_soccer = get_base64_img("soccer.jpg")
@@ -49,7 +49,7 @@ st.markdown(f"""
     
     /* 웅장한 히어로 섹션 */
     .hero-section {{
-        background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('{hero_bg}');
+        background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover;
         background-position: center;
         padding: 180px 30px 80px 30px;
@@ -58,23 +58,24 @@ st.markdown(f"""
         text-align: left;
         margin: -6rem -2rem 2.5rem -2rem;
     }}
-    .hero-title {{ font-weight: 900; font-size: 46px; line-height: 1.1; letter-spacing: -2px; }}
-    .hero-sub {{ font-size: 19px; opacity: 0.9; margin-top: 15px; font-weight: 400; }}
+    .hero-title {{ font-weight: 900; font-size: 48px; line-height: 1.1; letter-spacing: -2.5px; }}
+    .hero-sub {{ font-size: 19px; opacity: 0.95; margin-top: 15px; font-weight: 400; }}
 
     /* 프로그램 이미지 박스 */
     .prog-img-box {{
         width: 100%;
-        height: 220px;
-        border-radius: 28px;
+        height: 240px;
+        border-radius: 32px;
         background-size: cover;
         background-position: center;
-        margin-bottom: 12px;
-        border: 1px solid rgba(0,0,0,0.05);
+        margin-bottom: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.03);
     }}
     
     /* 라벨 및 타이틀 */
-    .prog-tag {{ font-size: 13px; font-weight: 700; color: #007AFF; margin-bottom: 4px; text-transform: uppercase; }}
-    .prog-title {{ font-size: 22px; font-weight: 800; color: #1C1C1E; margin-bottom: 15px; }}
+    .prog-tag {{ font-size: 13px; font-weight: 700; color: #007AFF; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }}
+    .prog-title {{ font-size: 24px; font-weight: 800; color: #1C1C1E; margin-bottom: 18px; letter-spacing: -0.5px; }}
 
     /* 조원 결과 박스 */
     .member-box {{
@@ -83,20 +84,21 @@ st.markdown(f"""
         border-radius: 24px;
         margin-top: 15px;
         border: 1px solid #E5E5EA;
-        margin-bottom: 30px;
+        margin-bottom: 35px;
     }}
 
-    /* 버튼 스타일 전면 수정 (코드가 글자로 안 나오게) */
+    /* 버튼 스타일 */
     .stButton>button {{
-        width: 100%; border-radius: 16px; background-color: #1C1C1E;
-        color: white; font-weight: 600; border: none; height: 3.5em;
+        width: 100%; border-radius: 18px; background-color: #1C1C1E;
+        color: white; font-weight: 600; border: none; height: 3.8em;
         font-size: 16px; transition: all 0.2s ease;
     }}
     .stButton>button:active {{ transform: scale(0.98); opacity: 0.9; }}
     
     .back-btn button {{
-        background-color: #E5E5EA !important;
+        background-color: #F2F2F7 !important;
         color: #1C1C1E !important;
+        border: 1px solid #E5E5EA !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -133,6 +135,14 @@ locations = {
     }
 }
 
+# 이동 경로 좌표 리스트 (순서대로 연결)
+route_path = [
+    [36.111006, 128.313156], # 잔디광장
+    [36.119797, 128.314458], # 배꼽마당
+    [36.119397, 128.319959], # 하트평상
+    [36.113301, 128.316201]  # 버드나무백숙
+]
+
 # --- 로직: 내비게이션 ---
 def navigate_to(page, target=None):
     st.session_state.page = page
@@ -145,7 +155,7 @@ if st.session_state.page == 'main':
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk<sup>+</sup></div>
-        <div class="hero-sub">금오산의 정취를 느끼며,<br>함께 걷는 우리의 미래.</div>
+        <div class="hero-sub">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -159,17 +169,30 @@ if st.session_state.page == 'main':
     else:
         st.warning("members.csv 파일을 찾을 수 없습니다.")
 
-    # [2] 지도 섹션
-    st.markdown("#### 🗺️ 코스 지도")
-    st.caption("지도 위의 마커를 클릭하면 상세 페이지로 이동합니다.")
-    m = folium.Map(location=[36.1155, 128.3160], zoom_start=14, tiles="cartodbvoyager")
+    # [2] 세련된 지도 섹션 (Voyager + Path)
+    st.markdown("#### 🗺️ 올레길 산책 코스")
+    st.caption("지도 위의 마커를 클릭하여 미션 내용을 확인하세요. 블루 라인이 산책 경로입니다.")
+    
+    # CartoDB Voyager 타일로 세련되게 변경
+    m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
+    
+    # 이동 경로 하이라이트 (진한 파란색 라인)
+    folium.PolyLine(
+        locations=route_path,
+        color="#007AFF",
+        weight=5,
+        opacity=0.7,
+        dash_array='10, 10' # 점선 효과로 더욱 세련되게
+    ).add_to(m)
+    
     for name, info in locations.items():
         folium.Marker(
             [info["lat"], info["lon"]],
             popup=name,
             icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')
         ).add_to(m)
-    map_res = st_folium(m, width="100%", height=350)
+        
+    map_res = st_folium(m, width="100%", height=380)
     
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked = map_res["last_object_clicked_popup"]
@@ -196,32 +219,31 @@ elif st.session_state.page == 'detail':
     item = locations[name]
     
     st.markdown('<div class="back-btn">', unsafe_allow_html=True)
-    if st.button("← 돌아가기"):
+    if st.button("← 메인 화면으로 돌아가기"):
         navigate_to('main')
     st.markdown('</div>', unsafe_allow_html=True)
 
     bg_url = f"data:image/jpeg;base64,{item['bg']}" if item['bg'] else ""
     st.markdown(f"""
     <div style="background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.5)), url('{bg_url}'); 
-                background-size: cover; background-position: center; height: 280px; 
-                border-radius: 35px; margin: 25px 0; display: flex; align-items: flex-end; padding: 35px;">
+                background-size: cover; background-position: center; height: 300px; 
+                border-radius: 40px; margin: 25px 0; display: flex; align-items: flex-end; padding: 40px;">
         <div style="color: white;">
-            <div style="font-size: 14px; font-weight: 700; opacity: 0.8;">{item['tag']}</div>
-            <div style="font-size: 34px; font-weight: 900; letter-spacing: -1.5px;">{name}</div>
+            <div style="font-size: 14px; font-weight: 700; opacity: 0.8; letter-spacing: 1px;">{item['tag']}</div>
+            <div style="font-size: 36px; font-weight: 900; letter-spacing: -1.5px;">{name}</div>
         </div>
     </div>
-    <div style="background-color: #F8F9FA; padding: 30px; border-radius: 28px; border: 1px solid #E5E5EA; margin-top:20px;">
+    <div style="background-color: #F8F9FA; padding: 35px; border-radius: 30px; border: 1px solid #E5E5EA; margin-top:20px;">
         <h3 style="margin-top:0;">{item['detail_title']}</h3>
-        <p style="font-size: 17px; color: #3A3A3C; line-height: 1.6;">{item['desc']}</p>
-        <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 25px 0;">
-        <h5 style="margin-top:0; font-weight:800;">💡 주요 안내</h5>
-        {"".join([f'<div style="margin-bottom:10px; font-size:15px;">✅ {p}</div>' for p in item['points']])}
+        <p style="font-size: 18px; color: #3A3A3C; line-height: 1.7;">{item['desc']}</p>
+        <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 30px 0;">
+        <h5 style="margin-top:0; font-weight:800;">💡 주요 가이드</h5>
+        {"".join([f'<div style="margin-bottom:12px; font-size:16px;">✅ {p}</div>' for p in item['points']])}
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("📍 길찾기 시작 (카카오맵)"):
+    if st.button("📍 이 지점 길찾기 (카카오맵)"):
         st.markdown(f"https://map.kakao.com/link/search/{name}")
 
-# 푸터 수정
+# 푸터 (2026 LG Innotek Talent Development Team)
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
-
