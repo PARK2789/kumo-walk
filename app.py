@@ -155,7 +155,7 @@ if st.session_state.view == 'home':
         <p style="color:#3A3A3C; font-size:15px; line-height:1.6; margin-bottom:0;">
             불편 사항이나 문의 사항은 아래로 연락주세요.<br>
             <b>인재육성팀 김선화 팀장</b><br>
-            <a href="tel:010-4488-5567" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
+            <a href="tel:010-4488-5567" style="color:#007AFF; text-decoration:none; font-weight:700;">010-4488-5567</a>
         </p>
     </div>
     """, unsafe_allow_html=True)
