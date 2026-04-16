@@ -9,6 +9,14 @@ import json
 # 1. 페이지 설정 및 상태 관리
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
+# 페이지 전환 시 스크롤을 상단으로 올리는 자바스크립트 주입
+st.markdown("""
+    <script>
+        var body = window.parent.document.querySelector(".main");
+        if (body) { body.scrollTop = 0; }
+    </script>
+""", unsafe_allow_html=True)
+
 if 'view' not in st.session_state:
     st.session_state.view = 'home'
 if 'target' not in st.session_state:
@@ -67,7 +75,7 @@ st.markdown(f"""
     }}
     .card-overlay {{
         position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-        background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%);
+        background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%);
         z-index: 1;
     }}
     .card-content {{ position: relative; z-index: 2; pointer-events: none; }}
@@ -79,7 +87,6 @@ st.markdown(f"""
         border: 1px solid #E5E5EA; margin-bottom: 40px;
     }}
 
-    /* 연락처 섹션 스타일 */
     .contact-section {{
         background-color: #F8F9FA; padding: 30px; border-radius: 30px;
         border: 1px solid #E5E5EA; margin-top: 50px; text-align: center;
@@ -90,7 +97,6 @@ st.markdown(f"""
         color: white; font-weight: 600; border: none; height: 4em; font-size: 16px;
     }}
     
-    /* 카카오맵 버튼용 특별 스타일 */
     div[data-testid="stLinkButton"] > a {{
         width: 100% !important; border-radius: 20px !important; background-color: #FEE500 !important;
         color: #191919 !important; font-weight: 700 !important; border: none !important; 
@@ -125,12 +131,19 @@ if st.session_state.view == 'home':
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     for name, info in program_data.items():
-        folium.Marker([info["lat"], info["lon"]], popup=name,
+        # 팝업 텍스트 스타일 보정 (작고 정갈하게)
+        popup_html = f'<div style="font-size: 13px; font-weight: 600; font-family: Pretendard; color: #1C1C1E; text-align: center; padding: 5px;">{name}</div>'
+        folium.Marker([info["lat"], info["lon"]], 
+                      popup=folium.Popup(popup_html, max_width=200),
                       icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
+    
     map_res = st_folium(m, width="100%", height=380)
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked = map_res["last_object_clicked_popup"]
-        if clicked in program_data: navigate_to('detail', clicked)
+        # HTML 태그 제거 로직 (팝업에서 가져온 경우 대비)
+        import re
+        clean_name = re.sub('<[^<]+?>', '', clicked).strip()
+        if clean_name in program_data: navigate_to('detail', clean_name)
 
     st.markdown('<h4 style="margin-top:50px; margin-bottom:25px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
@@ -148,14 +161,13 @@ if st.session_state.view == 'home':
         if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
-    # 담당자 연락처 섹션
     st.markdown(f"""
     <div class="contact-section">
-        <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 담당자 안내</h5>
+        <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h5>
         <p style="color:#3A3A3C; font-size:15px; line-height:1.6; margin-bottom:0;">
             불편 사항이나 문의 사항은 아래로 연락주세요.<br>
-            <b>인재육성팀 김선화 팀장</b><br>
-            <a href="tel:010-4488-5567" style="color:#007AFF; text-decoration:none; font-weight:700;">010-4488-5567</a>
+            <b>박성식 책임 (인재육성팀)</b><br>
+            <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -188,11 +200,9 @@ elif st.session_state.view == 'detail':
     <div style="margin-top:25px;"></div>
     """, unsafe_allow_html=True)
 
-    # 카카오맵 좌표 기반 길찾기 URL (명칭, 위도, 경도 전달)
     nav_name = item.get('nav_name', name)
     lat, lon = item.get('lat'), item.get('lon')
     kakao_url = f"https://map.kakao.com/link/to/{nav_name},{lat},{lon}"
-    
     st.link_button("📍 이 지점 길찾기 (카카오맵)", kakao_url)
 
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
