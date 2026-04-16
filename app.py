@@ -94,12 +94,15 @@ st.markdown(f"""
 
 # --- 로직: 내비게이션 ---
 def navigate_to(view, target=None):
-    st.session_state.view = view
-    st.session_state.target = target
-    st.rerun()
+   # 🔥 folium 상태 제거 (핵심)
+   if "main_map" in st.session_state:
+       del st.session_state["main_map"]
 
-# 전체 앱을 하나의 컨테이너로 감싸고, view 상태에 따라 key를 변경하여 DOM 강제 재생성
-app_container = st.container(
+   st.session_state.view = view
+   st.session_state.target = target
+   st.rerun()
+
+# 전체 앱을 하나의 컨테이너로 감싸고, view 상태에 따라 key를 변경하여 DOM 강제 재생
    key=f"page-{st.session_state.view}-{st.session_state.target}"
 )
 
@@ -129,7 +132,7 @@ with app_container:
                           popup=folium.Popup(popup_html, max_width=150),
                           icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
         
-        map_res = st_folium(m, width="100%", height=380, key="main_map")
+        map_res = st_folium(m, width="100%", height=380, key=f"main_map_{st.session_state.view}")
         if map_res and map_res.get("last_object_clicked_popup"):
             clicked = map_res["last_object_clicked_popup"]
             clean_name = re.sub('<[^<]+?>', '', clicked).strip()
