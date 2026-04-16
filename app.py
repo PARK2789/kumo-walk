@@ -10,29 +10,37 @@ import re
 # 1. 페이지 설정
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
-# --- [초강력 스크롤 초기화 스크립트] ---
-# 페이지 전환 시점에 호출되어 브라우저의 모든 스크롤 포인트를 강제로 최상단으로 올립니다.
-def scroll_to_top():
-    st.markdown(
-        """
-        <div id="scroll-anchor"></div>
+# --- [모바일 환경 전용 스크롤 강제 초기화 스크립트] ---
+# 뷰가 전환될 때마다 실행되어 모바일 브라우저의 스크롤을 0.5초간 반복적으로 상단 고정합니다.
+def force_scroll_to_top():
+    # 뷰와 타겟 정보를 조합해 고유 키 생성 (컴포넌트 재실행 유도)
+    scroll_key = f"scroll_{st.session_state.view}_{st.session_state.target}"
+    st.components.v1.html(
+        f"""
         <script>
-            function performScroll() {
-                // 1. 스트림릿 메인 컨테이너 타겟팅
-                var mainSections = window.parent.document.querySelectorAll('section.main');
-                mainSections.forEach(function(section) {
-                    section.scrollTo({top: 0, behavior: 'auto'});
-                });
-                
-                // 2. 일반 윈도우 스크롤 타겟팅
-                window.parent.scrollTo(0, 0);
-                window.scrollTo(0, 0);
-            }
-            // 화면 렌더링 시간을 고려하여 100ms 지연 실행 (가장 확실한 방법)
-            setTimeout(performScroll, 100);
+            (function() {{
+                const performScroll = () => {{
+                    const selectors = ['.main', '.stApp', '.block-container'];
+                    selectors.forEach(sel => {{
+                        const el = window.parent.document.querySelector(sel);
+                        if (el) el.scrollTop = 0;
+                    }});
+                    window.parent.scrollTo(0, 0);
+                    window.scrollTo(0, 0);
+                }};
+
+                // 모바일 렌더링 지연을 고려해 500ms 동안 50ms 간격으로 반복 실행
+                let count = 0;
+                const interval = setInterval(() => {{
+                    performScroll();
+                    count++;
+                    if (count > 10) clearInterval(interval);
+                }}, 50);
+            }})();
         </script>
         """,
-        unsafe_allow_html=True
+        height=0,
+        key=scroll_key
     )
 
 # 세션 상태 관리
@@ -76,25 +84,25 @@ st.markdown(f"""
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     .stApp {{ background-color: #FFFFFF; font-family: 'Pretendard', sans-serif; }}
     
-    /* 상단 여백 잘림 방지 보정 */
-    .block-container {{ padding-top: 1rem !important; padding-bottom: 5rem !important; }}
+    /* 최상단 여백 잘림 방지 (모바일 대응) */
+    .block-container {{ padding-top: 2rem !important; padding-bottom: 5rem !important; }}
     
-    /* 히어로 섹션 */
+    /* 히어로 섹션 - 이미지 꽉 차게 */
     .hero-section {{
         background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
-        padding: 160px 30px 60px 30px; border-radius: 0 0 50px 50px;
-        color: white; text-align: left; margin: -5rem -2rem 2.5rem -2rem;
+        padding: 180px 30px 80px 30px; border-radius: 0 0 50px 50px;
+        color: white; text-align: left; margin: -6rem -2rem 2.5rem -2rem;
     }}
-    .hero-title {{ font-weight: 900; font-size: 48px; line-height: 1.1; letter-spacing: -2.5px; }}
+    .hero-title {{ font-weight: 900; font-size: 52px; line-height: 1.1; letter-spacing: -2.5px; }}
 
-    /* 프로그램 카드 (이미지 풀 적용) */
+    /* 프로그램 카드 - Full Image 디자인 (dotcle 스타일) */
     .program-card {{
-        position: relative; height: 320px; border-radius: 35px;
+        position: relative; height: 350px; border-radius: 40px;
         margin-bottom: 25px; overflow: hidden; background-size: cover;
         background-position: center; display: flex; flex-direction: column;
-        justify-content: flex-end; padding: 35px; color: white;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+        justify-content: flex-end; padding: 40px; color: white;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.12);
         border: 1px solid rgba(255,255,255,0.1);
     }}
     .card-overlay {{
@@ -103,29 +111,29 @@ st.markdown(f"""
         z-index: 1;
     }}
     .card-content {{ position: relative; z-index: 2; pointer-events: none; }}
-    .card-tag {{ font-size: 13px; font-weight: 700; color: #FFFFFF; opacity: 0.9; margin-bottom: 6px; letter-spacing: 1px; }}
-    .card-title {{ font-size: 26px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.2; }}
+    .card-tag {{ font-size: 14px; font-weight: 700; color: #FFFFFF; opacity: 0.9; margin-bottom: 8px; letter-spacing: 1px; }}
+    .card-title {{ font-size: 30px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.2; }}
 
     .member-box {{
-        background-color: #F2F2F7; padding: 22px; border-radius: 25px;
-        border: 1px solid #E5E5EA; margin-bottom: 35px;
+        background-color: #F2F2F7; padding: 24px; border-radius: 28px;
+        border: 1px solid #E5E5EA; margin-bottom: 40px;
     }}
 
     .contact-section {{
-        background-color: #F8F9FA; padding: 25px; border-radius: 25px;
-        border: 1px solid #E5E5EA; margin-top: 40px; text-align: center;
+        background-color: #F8F9FA; padding: 30px; border-radius: 30px;
+        border: 1px solid #E5E5EA; margin-top: 50px; text-align: center;
     }}
 
     .stButton>button {{
-        width: 100%; border-radius: 18px; background-color: #1C1C1E;
-        color: white; font-weight: 600; border: none; height: 3.8em; font-size: 15px;
+        width: 100%; border-radius: 20px; background-color: #1C1C1E;
+        color: white; font-weight: 600; border: none; height: 4em; font-size: 16px;
     }}
     
     div[data-testid="stLinkButton"] > a {{
-        width: 100% !important; border-radius: 18px !important; background-color: #FEE500 !important;
+        width: 100% !important; border-radius: 20px !important; background-color: #FEE500 !important;
         color: #191919 !important; font-weight: 700 !important; border: none !important; 
-        height: 3.8em !important; display: flex !important; align-items: center !important; 
-        justify-content: center !important; text-decoration: none !important; font-size: 15px !important;
+        height: 4em !important; display: flex !important; align-items: center !important; 
+        justify-content: center !important; text-decoration: none !important; font-size: 16px !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -138,28 +146,28 @@ def navigate_to(view, target=None):
 
 # --- 화면 1: 홈 (Home) ---
 if st.session_state.view == 'home':
-    scroll_to_top() # 최상단 이동 실행
+    force_scroll_to_top() # 최상단 강제 스크롤 실행
     
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk<sup>+</sup></div>
-        <div style="font-size: 19px; opacity: 0.9; margin-top: 15px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
+        <div style="font-size: 20px; opacity: 0.9; margin-top: 15px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("#### 👥 우리 조원 확인")
     member_data = load_member_data()
     if member_data:
-        selected_group = st.selectbox("조를 선택하세요", ["조를 선택해 주세요"] + list(member_data.keys()), label_visibility="collapsed")
+        selected_group = st.selectbox("조를 선택하세요", ["조를 선택해 주세요"] + list(member_dict.keys()) if 'member_dict' in locals() else ["조를 선택해 주세요"] + list(member_data.keys()), label_visibility="collapsed")
         if selected_group != "조를 선택해 주세요":
             st.markdown(f'<div class="member-box"><b>{selected_group} 멤버 명단</b><br>{member_data[selected_group]}</div>', unsafe_allow_html=True)
 
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     for name, info in program_data.items():
-        popup_style = f'<div style="font-size: 13px; font-weight: 600; font-family: Pretendard; color: #1C1C1E; text-align: center; padding: 2px;">{name}</div>'
+        popup_html = f'<div style="font-size: 13px; font-weight: 600; font-family: Pretendard; color: #1C1C1E; text-align: center; padding: 3px;">{name}</div>'
         folium.Marker([info["lat"], info["lon"]], 
-                      popup=folium.Popup(popup_style, max_width=150),
+                      popup=folium.Popup(popup_html, max_width=150),
                       icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
     
     map_res = st_folium(m, width="100%", height=380, key="main_map")
@@ -168,7 +176,7 @@ if st.session_state.view == 'home':
         clean_name = re.sub('<[^<]+?>', '', clicked).strip()
         if clean_name in program_data: navigate_to('detail', clean_name)
 
-    st.markdown('<h4 style="margin-top:40px; margin-bottom:20px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
+    st.markdown('<h4 style="margin-top:50px; margin-bottom:25px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
         img_data = get_base64_img(info["bg_file"])
         bg_url = f"data:image/jpeg;base64,{img_data}" if img_data else ""
@@ -197,7 +205,7 @@ if st.session_state.view == 'home':
 
 # --- 화면 2: 상세 정보 (Detail) ---
 elif st.session_state.view == 'detail':
-    scroll_to_top() # 상세 페이지 진입 시 최상단 강제 이동
+    force_scroll_to_top() # 상세 진입 시 최상단 강제 스크롤 실행
     
     name = st.session_state.target
     item = program_data.get(name, {})
@@ -209,20 +217,20 @@ elif st.session_state.view == 'detail':
     st.markdown(f"""
     <div style="background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.5)), url('{bg_url}'); 
                 background-size: cover; background-position: center; height: 350px; 
-                border-radius: 40px; margin: 20px 0; display: flex; align-items: flex-end; padding: 40px;">
+                border-radius: 40px; margin: 25px 0; display: flex; align-items: flex-end; padding: 40px;">
         <div style="color: white;">
             <div style="font-size: 14px; font-weight: 700; opacity: 0.8; letter-spacing: 1px;">{item.get('tag')}</div>
-            <div style="font-size: 34px; font-weight: 900; letter-spacing: -1.5px; line-height: 1.1;">{name}</div>
+            <div style="font-size: 38px; font-weight: 900; letter-spacing: -1.5px;">{name}</div>
         </div>
     </div>
-    <div style="background-color: #F8F9FA; padding: 30px; border-radius: 30px; border: 1px solid #E5E5EA; margin-top:15px;">
-        <h3 style="margin-top:0; font-weight:800; font-size: 22px;">{item.get('detail_title')}</h3>
-        <p style="font-size: 17px; color: #3A3A3C; line-height: 1.6;">{item.get('desc')}</p>
-        <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 25px 0;">
-        <h5 style="margin-top:0; font-weight:800; font-size: 18px;">📝 상세 가이드</h5>
-        {"".join([f'<div style="margin-bottom:10px; font-size:16px;">✅ {p}</div>' for p in item.get('points', [])])}
+    <div style="background-color: #F8F9FA; padding: 35px; border-radius: 30px; border: 1px solid #E5E5EA; margin-top:20px;">
+        <h3 style="margin-top:0; font-weight:800;">{item.get('detail_title')}</h3>
+        <p style="font-size: 18px; color: #3A3A3C; line-height: 1.7;">{item.get('desc')}</p>
+        <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 30px 0;">
+        <h5 style="margin-top:0; font-weight:800;">📝 상세 가이드</h5>
+        {"".join([f'<div style="margin-bottom:12px; font-size:16px;">✅ {p}</div>' for p in item.get('points', [])])}
     </div>
-    <div style="margin-top:20px;"></div>
+    <div style="margin-top:25px;"></div>
     """, unsafe_allow_html=True)
 
     nav_name = item.get('nav_name', name)
@@ -230,4 +238,5 @@ elif st.session_state.view == 'detail':
     kakao_url = f"https://map.kakao.com/link/to/{nav_name},{lat},{lon}"
     st.link_button("📍 이 지점 길찾기 (카카오맵)", kakao_url)
 
-st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:11px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
+st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
+
