@@ -10,6 +10,41 @@ import re
 # 1. 페이지 설정 (최상단 고정)
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
+# --- [모바일 스크롤 완전 해결을 위한 초강력 스크립트] ---
+def force_mobile_scroll_reset():
+    # 현재 뷰 상태에 따라 고유한 키 생성
+    view_id = f"nav-{st.session_state.view}-{st.session_state.target}".replace(" ", "-")
+    st.markdown(f"""
+        <div id="{view_id}" style="display:none;"></div>
+        <script>
+            (function() {{
+                const resetScroll = () => {{
+                    const containers = [
+                        window.parent.document.querySelector('.main'),
+                        window.parent.document.querySelector('.stApp'),
+                        window.parent.document,
+                        window
+                    ];
+                    containers.forEach(c => {{
+                        if (c && c.scrollTo) c.scrollTo({{top: 0, behavior: 'instant'}});
+                        if (c && c.scrollTop !== undefined) c.scrollTop = 0;
+                    }});
+                }};
+
+                // 모바일 브라우저가 화면을 그리는 0.5초 동안 60fps 간격으로 계속 스크롤을 0으로 고정
+                let start = null;
+                const step = (timestamp) => {{
+                    if (!start) start = timestamp;
+                    resetScroll();
+                    if (timestamp - start < 500) {{
+                        window.requestAnimationFrame(step);
+                    }}
+                }};
+                window.requestAnimationFrame(step);
+            }})();
+        </script>
+    """, unsafe_allow_html=True)
+
 # 2. 세션 상태 관리
 if 'view' not in st.session_state:
     st.session_state.view = 'home'
@@ -94,22 +129,18 @@ st.markdown(f"""
 
 # --- 로직: 내비게이션 ---
 def navigate_to(view, target=None):
-   # 🔥 folium 상태 제거 (핵심)
-   if "main_map" in st.session_state:
-       del st.session_state["main_map"]
+    st.session_state.view = view
+    st.session_state.target = target
+    st.rerun()
 
-   st.session_state.view = view
-   st.session_state.target = target
-   st.rerun()
-
-# 전체 앱을 하나의 컨테이너로 감싸고, view 상태에 따라 key를 변경하여 DOM 강제 재생
-   key=f"page-{st.session_state.view}-{st.session_state.target}"
-
+# 전체 앱을 하나의 컨테이너로 감싸고, view 상태에 따라 key를 변경하여 DOM 강제 재생성
+app_container = st.container()
 
 with app_container:
     # --- 화면 1: 홈 (Home) ---
     if st.session_state.view == 'home':
-                
+        force_mobile_scroll_reset() # 화면 진입 시 즉시 강제 초기화
+        
         st.markdown(f"""
         <div class="hero-section">
             <div class="hero-title">CEO Talk<sup>+</sup></div>
@@ -132,7 +163,7 @@ with app_container:
                           popup=folium.Popup(popup_html, max_width=150),
                           icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
         
-        map_res = st_folium(m, width="100%", height=380, key=f"main_map_{st.session_state.view}")
+        map_res = st_folium(m, width="100%", height=380, key="main_map")
         if map_res and map_res.get("last_object_clicked_popup"):
             clicked = map_res["last_object_clicked_popup"]
             clean_name = re.sub('<[^<]+?>', '', clicked).strip()
@@ -156,6 +187,7 @@ with app_container:
 
     # --- 화면 2: 상세 정보 (Detail) ---
     elif st.session_state.view == 'detail':
+        force_mobile_scroll_reset() # 상세 페이지 진입 시에도 무한 스크롤 강제 초기화
         
         name = st.session_state.target
         item = program_data.get(name, {})
