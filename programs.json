@@ -6,6 +6,7 @@
     "icon": "play",
     "bg_file": "grass.jpg",
     "tag": "STARTING POINT",
+    "nav_name": "금오산 도립공원 잔디 광장",
     "detail_title": "새로운 연결의 시작",
     "desc": "금오산 도립공원 잔디광장에서 CEO Talk+가 진행됩니다",
     "points": [
@@ -22,6 +23,7 @@
     "icon": "flag",
     "bg_file": "soccer.jpg",
     "tag": "ACTIVITY 01",
+    "nav_name": "금오산 배꼽마당",
     "detail_title": "목표 달성의 염원을 담아 슛~골인!",
     "desc": "LG이노텍 목표 달성을 위한 첫 번째 미션입니다.<br>조별 릴레이 슈팅으로 성공하면 점수를 획득하게 됩니다!",
     "points": [
@@ -39,6 +41,7 @@
     "icon": "flag",
     "bg_file": "ddakji.jpg",
     "tag": "ACTIVITY 02",
+    "nav_name": "금오산 하트 평상",
     "detail_title": "Bottleneck 타파를 위한 추억의 딱지치기!",
     "desc": "뚝방길 하트평상에서 펼쳐지는 Bottleneck 타파 딱지치기!<br>우리를 가로막는 Bottleneck(딱지)을 시원하게 뒤집어보세요",
     "points": [
