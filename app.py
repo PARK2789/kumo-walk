@@ -5,17 +5,27 @@ from streamlit_folium import st_folium
 import base64
 import os
 import json
+import re
 
 # 1. 페이지 설정 및 상태 관리
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
-# 페이지 전환 시 스크롤을 상단으로 올리는 자바스크립트 주입
-st.markdown("""
-    <script>
-        var body = window.parent.document.querySelector(".main");
-        if (body) { body.scrollTop = 0; }
-    </script>
-""", unsafe_allow_html=True)
+# --- [강력한 스크롤 리셋 로직] ---
+# 뷰가 바뀔 때마다 실행되어 화면을 최상단으로 끌어올립니다.
+def reset_scroll():
+    st.markdown('<div id="top"></div>', unsafe_allow_html=True)
+    st.components.v1.html(
+        """
+        <script>
+            var mainContainer = window.parent.document.querySelector('.main');
+            if (mainContainer) {
+                mainContainer.scrollTo({top: 0, behavior: 'auto'});
+            }
+            window.scrollTo(0, 0);
+        </script>
+        """,
+        height=0,
+    )
 
 if 'view' not in st.session_state:
     st.session_state.view = 'home'
@@ -57,6 +67,9 @@ st.markdown(f"""
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     .stApp {{ background-color: #FFFFFF; font-family: 'Pretendard', sans-serif; }}
     
+    /* 화면 최상단 앵커 위치 보정 */
+    #top {{ position: absolute; top: 0; left: 0; }}
+
     .hero-section {{
         background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
@@ -114,6 +127,8 @@ def navigate_to(view, target=None):
 
 # --- 화면 1: 홈 (Home) ---
 if st.session_state.view == 'home':
+    reset_scroll() # 홈 진입 시 스크롤 리셋
+    
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk<sup>+</sup></div>
@@ -124,24 +139,21 @@ if st.session_state.view == 'home':
     st.markdown("#### 👥 우리 조원 확인")
     member_data = load_member_data()
     if member_data:
-        selected_group = st.selectbox("조를 선택하세요", ["조를 선택해 주세요"] + list(member_data.keys()), label_visibility="collapsed")
+        selected_group = st.selectbox("조를 선택하세요", ["조를 선택해 주세요"] + list(member_dict.keys()) if 'member_dict' in locals() else ["조를 선택해 주세요"] + list(member_data.keys()), label_visibility="collapsed")
         if selected_group != "조를 선택해 주세요":
             st.markdown(f'<div class="member-box"><b>{selected_group} 멤버 명단</b><br>{member_data[selected_group]}</div>', unsafe_allow_html=True)
 
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     for name, info in program_data.items():
-        # 팝업 텍스트 스타일 보정 (작고 정갈하게)
-        popup_html = f'<div style="font-size: 13px; font-weight: 600; font-family: Pretendard; color: #1C1C1E; text-align: center; padding: 5px;">{name}</div>'
+        popup_html = f'<div style="font-size: 13px; font-weight: 600; font-family: Pretendard; color: #1C1C1E; text-align: center; padding: 3px;">{name}</div>'
         folium.Marker([info["lat"], info["lon"]], 
-                      popup=folium.Popup(popup_html, max_width=200),
+                      popup=folium.Popup(popup_html, max_width=150),
                       icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
     
-    map_res = st_folium(m, width="100%", height=380)
+    map_res = st_folium(m, width="100%", height=380, key="main_map")
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked = map_res["last_object_clicked_popup"]
-        # HTML 태그 제거 로직 (팝업에서 가져온 경우 대비)
-        import re
         clean_name = re.sub('<[^<]+?>', '', clicked).strip()
         if clean_name in program_data: navigate_to('detail', clean_name)
 
@@ -163,17 +175,19 @@ if st.session_state.view == 'home':
 
     st.markdown(f"""
     <div class="contact-section">
-        <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 담당자 안내</h5>
+        <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h5>
         <p style="color:#3A3A3C; font-size:15px; line-height:1.6; margin-bottom:0;">
             불편 사항이나 문의 사항은 아래로 연락주세요.<br>
-            <b>인재육성팀장 김선화</b><br>
-            <a href="tel:010-4488-5567" style="color:#007AFF; text-decoration:none; font-weight:700;">010-4488-5567</a>
+            <b>박성식 책임 (인재육성팀)</b><br>
+            <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
         </p>
     </div>
     """, unsafe_allow_html=True)
 
 # --- 화면 2: 상세 정보 (Detail) ---
 elif st.session_state.view == 'detail':
+    reset_scroll() # 상세 페이지 진입 시 스크롤 리셋
+    
     name = st.session_state.target
     item = program_data.get(name, {})
     
