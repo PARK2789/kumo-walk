@@ -22,10 +22,9 @@ def get_base64_img(file_path):
         return base64.b64encode(data).decode()
     return ""
 
-# 상단 숲 이미지는 고정 로드
 img_forest = get_base64_img("forest.jpg")
 
-# 3. 데이터 로드 함수 (JSON 및 CSV)
+# 3. 데이터 로드 함수
 def load_json_data():
     if os.path.exists("programs.json"):
         with open("programs.json", "r", encoding="utf-8") as f:
@@ -42,7 +41,7 @@ def load_member_data():
 
 program_data = load_json_data()
 
-# 4. 프리미엄 디자인 CSS (Full Background 이미지 레이아웃)
+# 4. 프리미엄 디자인 CSS
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
 st.markdown(f"""
@@ -80,12 +79,24 @@ st.markdown(f"""
         border: 1px solid #E5E5EA; margin-bottom: 40px;
     }}
 
+    /* 연락처 섹션 스타일 */
+    .contact-section {{
+        background-color: #F8F9FA; padding: 30px; border-radius: 30px;
+        border: 1px solid #E5E5EA; margin-top: 50px; text-align: center;
+    }}
+
     .stButton>button {{
         width: 100%; border-radius: 20px; background-color: #1C1C1E;
         color: white; font-weight: 600; border: none; height: 4em; font-size: 16px;
     }}
-    .stButton>button:active {{ transform: scale(0.98); }}
-    .back-btn button {{ background-color: #F2F2F7 !important; color: #1C1C1E !important; }}
+    
+    /* 카카오맵 버튼용 특별 스타일 */
+    div[data-testid="stLinkButton"] > a {{
+        width: 100% !important; border-radius: 20px !important; background-color: #FEE500 !important;
+        color: #191919 !important; font-weight: 700 !important; border: none !important; 
+        height: 4em !important; display: flex !important; align-items: center !important; 
+        justify-content: center !important; text-decoration: none !important; font-size: 16px !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -121,7 +132,7 @@ if st.session_state.view == 'home':
         clicked = map_res["last_object_clicked_popup"]
         if clicked in program_data: navigate_to('detail', clicked)
 
-    st.markdown('<h4 style="margin-top:50px; margin-bottom:25px;">🚩 프로그램 상세 정보</h4>', unsafe_allow_html=True)
+    st.markdown('<h4 style="margin-top:50px; margin-bottom:25px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
         img_data = get_base64_img(info["bg_file"])
         bg_url = f"data:image/jpeg;base64,{img_data}" if img_data else ""
@@ -137,14 +148,24 @@ if st.session_state.view == 'home':
         if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
+    # 담당자 연락처 섹션
+    st.markdown(f"""
+    <div class="contact-section">
+        <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h5>
+        <p style="color:#3A3A3C; font-size:15px; line-height:1.6; margin-bottom:0;">
+            불편 사항이나 문의 사항은 아래로 연락주세요.<br>
+            <b>인재육성팀 김선화 팀장</b><br>
+            <a href="tel:010-4488-5567" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
 # --- 화면 2: 상세 정보 (Detail) ---
 elif st.session_state.view == 'detail':
     name = st.session_state.target
     item = program_data.get(name, {})
     
-    st.markdown('<div class="back-btn">', unsafe_allow_html=True)
-    if st.button("← 메인 화면으로 돌아가기"): navigate_to('home')
-    st.markdown('</div>', unsafe_allow_html=True)
+    if st.button("← 돌아가기"): navigate_to('home')
 
     img_data = get_base64_img(item.get("bg_file", ""))
     bg_url = f"data:image/jpeg;base64,{img_data}" if img_data else ""
@@ -154,7 +175,7 @@ elif st.session_state.view == 'detail':
                 border-radius: 40px; margin: 25px 0; display: flex; align-items: flex-end; padding: 40px;">
         <div style="color: white;">
             <div style="font-size: 14px; font-weight: 700; opacity: 0.8; letter-spacing: 1px;">{item.get('tag')}</div>
-            <div style="font-size: 36px; font-weight: 900; letter-spacing: -1.5px;">{name}</div>
+            <div style="font-size: 38px; font-weight: 900; letter-spacing: -1.5px;">{name}</div>
         </div>
     </div>
     <div style="background-color: #F8F9FA; padding: 35px; border-radius: 30px; border: 1px solid #E5E5EA; margin-top:20px;">
@@ -164,10 +185,15 @@ elif st.session_state.view == 'detail':
         <h5 style="margin-top:0; font-weight:800;">📝 상세 가이드</h5>
         {"".join([f'<div style="margin-bottom:12px; font-size:16px;">✅ {p}</div>' for p in item.get('points', [])])}
     </div>
+    <div style="margin-top:25px;"></div>
     """, unsafe_allow_html=True)
 
-    if st.button("📍 이 지점 길찾기 (카카오맵)"):
-        st.markdown(f"https://map.kakao.com/link/search/{name}")
+    # 카카오맵 좌표 기반 길찾기 URL (명칭, 위도, 경도 전달)
+    nav_name = item.get('nav_name', name)
+    lat, lon = item.get('lat'), item.get('lon')
+    kakao_url = f"https://map.kakao.com/link/to/{nav_name},{lat},{lon}"
+    
+    st.link_button("📍 이 지점 길찾기 (카카오맵)", kakao_url)
 
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
 
