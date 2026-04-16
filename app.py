@@ -15,28 +15,41 @@ if 'view' not in st.session_state:
     st.session_state.view = 'home'
 if 'target' not in st.session_state:
     st.session_state.target = None
+if 'scroll_nonce' not in st.session_state:
+    st.session_state.scroll_nonce = 0
 
-# --- [상세보기 클릭 시 즉시 스크롤 리셋을 위한 특수 로직] ---
+# --- [스크롤 관련 로직만 보강] ---
 def trigger_scroll():
-    # 뷰와 타겟 정보를 조합해 유니크한 키 생성
-    scroll_key = f"scroll_trigger_{st.session_state.view}_{st.session_state.target}"
-    anchor_id = f"page_top_anchor_{st.session_state.view}_{st.session_state.target}"
+    scroll_key = f"scroll_trigger_{st.session_state.view}_{st.session_state.target}_{st.session_state.scroll_nonce}"
+    anchor_id = f"page_top_anchor_{st.session_state.view}_{st.session_state.target}_{st.session_state.scroll_nonce}"
 
     st.markdown(f"""
         <div id="{anchor_id}"></div>
         <div id="{scroll_key}"></div>
         <script>
             (function() {{
+                const doc = window.parent.document;
                 const anchorId = "{anchor_id}";
+                const storageKey = "force_scroll_top";
 
-                const scrollReset = () => {{
-                    const doc = window.parent.document;
+                // 브라우저 자동 스크롤 복원 방지
+                try {{
+                    if ('scrollRestoration' in window.parent.history) {{
+                        window.parent.history.scrollRestoration = 'manual';
+                    }}
+                }} catch (e) {{}}
 
-                    // 1) 가장 먼저 앵커 위치로 강제 이동
+                // 강제 스크롤 플래그 저장
+                try {{
+                    window.parent.sessionStorage.setItem(storageKey, anchorId);
+                }} catch (e) {{}}
+
+                const doScrollTop = () => {{
                     const anchor =
                         doc.getElementById(anchorId) ||
                         window.document.getElementById(anchorId);
 
+                    // 1차: 앵커 기준 최상단 이동
                     if (anchor && typeof anchor.scrollIntoView === 'function') {{
                         try {{
                             anchor.scrollIntoView({{
@@ -49,7 +62,7 @@ def trigger_scroll():
                         }}
                     }}
 
-                    // 2) 보조적으로 가능한 모든 스크롤 컨테이너를 0으로 초기화
+                    // 2차: 가능한 모든 스크롤 컨테이너 초기화
                     const candidates = [
                         window.parent,
                         window,
@@ -74,10 +87,27 @@ def trigger_scroll():
                     }});
                 }};
 
-                // 모바일 렌더링 지연 대응
-                [0, 80, 200, 400, 800, 1200].forEach((delay) => {{
-                    setTimeout(scrollReset, delay);
+                // 모바일 렌더링 지연 대응: 여러 번 반복 실행
+                [0, 50, 150, 300, 600, 1000, 1500].forEach((delay) => {{
+                    setTimeout(doScrollTop, delay);
                 }});
+
+                // 페이지 표시/로드 시 재보정
+                window.addEventListener('load', doScrollTop);
+                window.addEventListener('pageshow', doScrollTop);
+
+                // DOM 변경 감지 후 재보정
+                let count = 0;
+                const observer = new MutationObserver(() => {{
+                    doScrollTop();
+                    count += 1;
+                    if (count > 12) observer.disconnect();
+                }});
+
+                try {{
+                    observer.observe(doc.body, {{ childList: true, subtree: true }});
+                    setTimeout(() => observer.disconnect(), 2000);
+                }} catch (e) {{}}
             }})();
         </script>
     """, unsafe_allow_html=True)
@@ -104,7 +134,8 @@ def load_member_data():
         try:
             df = pd.read_csv("members.csv")
             return dict(zip(df['조'], df['명단']))
-        except: return None
+        except:
+            return None
     return None
 
 program_data = load_json_data()
@@ -168,11 +199,12 @@ st.markdown(f"""
 def navigate_to(view, target=None):
     st.session_state.view = view
     st.session_state.target = target
+    st.session_state.scroll_nonce += 1
     st.rerun()
 
 # --- 화면 1: 홈 (Home) ---
 if st.session_state.view == 'home':
-    trigger_scroll() # 화면 진입 시 즉시 스크롤 리셋 실행
+    trigger_scroll()
     
     st.markdown(f"""
     <div class="hero-section">
@@ -192,15 +224,18 @@ if st.session_state.view == 'home':
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     for name, info in program_data.items():
         popup_html = f'<div style="font-size: 13px; font-weight: 600; font-family: Pretendard; color: #1C1C1E; text-align: center; padding: 3px;">{name}</div>'
-        folium.Marker([info["lat"], info["lon"]], 
-                      popup=folium.Popup(popup_html, max_width=150),
-                      icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
+        folium.Marker(
+            [info["lat"], info["lon"]],
+            popup=folium.Popup(popup_html, max_width=150),
+            icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')
+        ).add_to(m)
     
     map_res = st_folium(m, width="100%", height=380, key="main_map")
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked = map_res["last_object_clicked_popup"]
         clean_name = re.sub('<[^<]+?>', '', clicked).strip()
-        if clean_name in program_data: navigate_to('detail', clean_name)
+        if clean_name in program_data:
+            navigate_to('detail', clean_name)
 
     st.markdown('<h4 style="margin-top:50px; margin-bottom:25px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
@@ -220,12 +255,13 @@ if st.session_state.view == 'home':
 
 # --- 화면 2: 상세 정보 (Detail) ---
 elif st.session_state.view == 'detail':
-    trigger_scroll() # 상세 페이지 진입 시에도 즉시 스크롤 리셋 실행
+    trigger_scroll()
     
     name = st.session_state.target
     item = program_data.get(name, {})
     
-    if st.button("← 돌아가기"): navigate_to('home')
+    if st.button("← 돌아가기"):
+        navigate_to('home')
 
     img_data = get_base64_img(item.get("bg_file", ""))
     bg_url = f"data:image/jpeg;base64,{img_data}" if img_data else ""
@@ -253,4 +289,3 @@ elif st.session_state.view == 'detail':
     st.link_button("📍 이 지점 길찾기 (카카오맵)", kakao_url)
 
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:12px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
-
