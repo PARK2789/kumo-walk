@@ -20,14 +20,36 @@ if 'target' not in st.session_state:
 def trigger_scroll():
     # 뷰와 타겟 정보를 조합해 유니크한 키 생성
     scroll_key = f"scroll_trigger_{st.session_state.view}_{st.session_state.target}"
+    anchor_id = f"page_top_anchor_{st.session_state.view}_{st.session_state.target}"
+
     st.markdown(f"""
+        <div id="{anchor_id}"></div>
         <div id="{scroll_key}"></div>
         <script>
             (function() {{
+                const anchorId = "{anchor_id}";
+
                 const scrollReset = () => {{
                     const doc = window.parent.document;
 
-                    // 모바일/PC 환경별로 실제 스크롤되는 후보들 전부 시도
+                    // 1) 가장 먼저 앵커 위치로 강제 이동
+                    const anchor =
+                        doc.getElementById(anchorId) ||
+                        window.document.getElementById(anchorId);
+
+                    if (anchor && typeof anchor.scrollIntoView === 'function') {{
+                        try {{
+                            anchor.scrollIntoView({{
+                                behavior: 'auto',
+                                block: 'start',
+                                inline: 'nearest'
+                            }});
+                        }} catch (e) {{
+                            anchor.scrollIntoView(true);
+                        }}
+                    }}
+
+                    // 2) 보조적으로 가능한 모든 스크롤 컨테이너를 0으로 초기화
                     const candidates = [
                         window.parent,
                         window,
@@ -48,29 +70,14 @@ def trigger_scroll():
                                 el.scrollTo(0, 0);
                             }}
                             el.scrollTop = 0;
-                        }} catch(e) {{}}
+                        }} catch (e) {{}}
                     }});
                 }};
 
-                // 모바일에서 렌더링이 늦는 경우가 있어서 여러 번 강제 실행
-                const delays = [0, 50, 150, 300, 600, 1000];
-                delays.forEach((delay) => setTimeout(scrollReset, delay));
-
-                // DOM 변화가 끝난 뒤 한 번 더 실행
-                let observerCount = 0;
-                const observer = new MutationObserver(() => {{
-                    scrollReset();
-                    observerCount += 1;
-                    if (observerCount > 10) observer.disconnect();
+                // 모바일 렌더링 지연 대응
+                [0, 80, 200, 400, 800, 1200].forEach((delay) => {{
+                    setTimeout(scrollReset, delay);
                 }});
-
-                try {{
-                    observer.observe(window.parent.document.body, {{
-                        childList: true,
-                        subtree: true
-                    }});
-                    setTimeout(() => observer.disconnect(), 1500);
-                }} catch(e) {{}}
             }})();
         </script>
     """, unsafe_allow_html=True)
