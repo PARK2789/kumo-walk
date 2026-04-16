@@ -104,7 +104,7 @@ def navigate_to(view, target=None):
 
 # 전체 앱을 하나의 컨테이너로 감싸고, view 상태에 따라 key를 변경하여 DOM 강제 재생
    key=f"page-{st.session_state.view}-{st.session_state.target}"
-)
+
 
 with app_container:
     # --- 화면 1: 홈 (Home) ---
