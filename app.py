@@ -7,51 +7,44 @@ import os
 import json
 import re
 
-# 1. 페이지 설정 (최상단 고정)
+# 1. 페이지 설정
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
-# --- [모바일 스크롤 완전 해결을 위한 초강력 스크립트] ---
-def force_mobile_scroll_reset():
-    # 현재 뷰 상태에 따라 고유한 키 생성
-    view_id = f"nav-{st.session_state.view}-{st.session_state.target}".replace(" ", "-")
+# --- [모바일 스크롤 강제 리셋: 최종 솔루션] ---
+def apply_mobile_scroll_reset():
+    # 페이지 상태(view, target)가 바뀔 때마다 고유한 ID 생성
+    unique_view_id = f"v-{st.session_state.view}-{st.session_state.target}".replace(" ", "-")
+    
+    # 1. 최상단에 물리적 앵커 설치
+    # 2. JS로 해당 앵커를 '즉시' 화면에 맞춤 (scrollIntoView)
+    # 3. Streamlit 메인 컨테이너 직접 제어
     st.markdown(f"""
-        <div id="{view_id}" style="display:none;"></div>
+        <div id="anchor-{unique_view_id}" style="position: absolute; top: -150px; left: 0;"></div>
         <script>
             (function() {{
-                const resetScroll = () => {{
-                    const containers = [
-                        window.parent.document.querySelector('.main'),
-                        window.parent.document.querySelector('.stApp'),
-                        window.parent.document,
-                        window
-                    ];
-                    containers.forEach(c => {{
-                        if (c && c.scrollTo) c.scrollTo({{top: 0, behavior: 'instant'}});
-                        if (c && c.scrollTop !== undefined) c.scrollTop = 0;
-                    }});
-                }};
-
-                // 모바일 브라우저가 화면을 그리는 0.5초 동안 60fps 간격으로 계속 스크롤을 0으로 고정
-                let start = null;
-                const step = (timestamp) => {{
-                    if (!start) start = timestamp;
-                    resetScroll();
-                    if (timestamp - start < 500) {{
-                        window.requestAnimationFrame(step);
+                const reset = () => {{
+                    const anchor = window.parent.document.getElementById("anchor-{unique_view_id}");
+                    if (anchor) {{
+                        anchor.scrollIntoView({{block: "start", behavior: "instant"}});
                     }}
+                    const main = window.parent.document.querySelector(".main");
+                    if (main) main.scrollTop = 0;
+                    window.parent.scrollTo(0, 0);
                 }};
-                window.requestAnimationFrame(step);
+                reset();
+                // 모바일 렌더링 타이밍을 고려해 0.1초 뒤 한 번 더 강제 실행
+                setTimeout(reset, 100);
             }})();
         </script>
     """, unsafe_allow_html=True)
 
-# 2. 세션 상태 관리
+# 세션 상태 관리
 if 'view' not in st.session_state:
     st.session_state.view = 'home'
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 3. 이미지 base64 변환
+# 2. 이미지 로드 함수
 def get_base64_img(file_path):
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
@@ -61,7 +54,7 @@ def get_base64_img(file_path):
 
 img_forest = get_base64_img("forest.jpg")
 
-# 4. 데이터 로드
+# 3. 데이터 로드 (JSON/CSV)
 def load_json_data():
     if os.path.exists("programs.json"):
         with open("programs.json", "r", encoding="utf-8") as f:
@@ -78,7 +71,7 @@ def load_member_data():
 
 program_data = load_json_data()
 
-# 5. 프리미엄 디자인 CSS (모바일 레이아웃 최적화)
+# 4. 프리미엄 디자인 CSS
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
 st.markdown(f"""
@@ -86,17 +79,18 @@ st.markdown(f"""
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     .stApp {{ background-color: #FFFFFF; font-family: 'Pretendard', sans-serif; }}
     
-    /* 상단 잘림 방지 (모바일 안전 영역) */
-    .block-container {{ padding-top: 3rem !important; padding-bottom: 5rem !important; }}
+    /* 최상단 여백 잘림 방지 (안전 영역) */
+    .block-container {{ padding-top: 3.5rem !important; padding-bottom: 6rem !important; }}
     
     .hero-section {{
         background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
-        padding: 180px 30px 60px 30px; border-radius: 0 0 50px 50px;
-        color: white; text-align: left; margin: -7rem -2rem 2.5rem -2rem;
+        padding: 180px 30px 70px 30px; border-radius: 0 0 50px 50px;
+        color: white; text-align: left; margin: -7.5rem -2rem 2.5rem -2rem;
     }}
-    .hero-title {{ font-weight: 900; font-size: 48px; line-height: 1.1; letter-spacing: -2.5px; }}
+    .hero-title {{ font-weight: 900; font-size: 50px; line-height: 1.1; letter-spacing: -2.5px; }}
 
+    /* 프로그램 카드 - 이미지 전체 적용 디자인 */
     .program-card {{
         position: relative; height: 350px; border-radius: 40px;
         margin-bottom: 25px; overflow: hidden; background-size: cover;
@@ -107,12 +101,12 @@ st.markdown(f"""
     }}
     .card-overlay {{
         position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-        background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%);
+        background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%);
         z-index: 1;
     }}
     .card-content {{ position: relative; z-index: 2; pointer-events: none; }}
     .card-tag {{ font-size: 14px; font-weight: 700; color: #FFFFFF; opacity: 0.9; margin-bottom: 8px; letter-spacing: 1px; }}
-    .card-title {{ font-size: 28px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.2; }}
+    .card-title {{ font-size: 30px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.2; }}
 
     .member-box {{
         background-color: #F2F2F7; padding: 24px; border-radius: 28px;
@@ -123,7 +117,13 @@ st.markdown(f"""
         width: 100%; border-radius: 20px; background-color: #1C1C1E;
         color: white; font-weight: 600; border: none; height: 4em; font-size: 16px;
     }}
-    .stButton>button:active {{ transform: scale(0.98); }}
+    
+    div[data-testid="stLinkButton"] > a {{
+        width: 100% !important; border-radius: 20px !important; background-color: #FEE500 !important;
+        color: #191919 !important; font-weight: 700 !important; border: none !important; 
+        height: 4em !important; display: flex !important; align-items: center !important; 
+        justify-content: center !important; text-decoration: none !important; font-size: 16px !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -133,14 +133,15 @@ def navigate_to(view, target=None):
     st.session_state.target = target
     st.rerun()
 
-# 전체 앱을 하나의 컨테이너로 감싸고, view 상태에 따라 key를 변경하여 DOM 강제 재생성
-app_container = st.container()
+# 전체 화면을 고유 키로 감싸서 브라우저가 매번 새 페이지로 인식하게 함
+current_page_key = f"page-{st.session_state.view}-{st.session_state.target}"
 
-with app_container:
+with st.container(key=current_page_key):
+    # 페이지 진입 시 스크롤 리셋 스크립트 주입
+    apply_mobile_scroll_reset()
+
     # --- 화면 1: 홈 (Home) ---
     if st.session_state.view == 'home':
-        force_mobile_scroll_reset() # 화면 진입 시 즉시 강제 초기화
-        
         st.markdown(f"""
         <div class="hero-section">
             <div class="hero-title">CEO Talk<sup>+</sup></div>
@@ -185,10 +186,20 @@ with app_container:
             if st.button(f"{name} 상세보기", key=f"btn_{name}"):
                 navigate_to('detail', name)
 
+        # 담당자 연락처
+        st.markdown(f"""
+        <div style="background-color:#F8F9FA; padding:30px; border-radius:30px; border:1px solid #E5E5EA; margin-top:50px; text-align:center;">
+            <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h5>
+            <p style="color:#3A3A3C; font-size:15px; line-height:1.6; margin-bottom:0;">
+                불편 사항은 아래로 연락주세요.<br>
+                <b>박성식 책임 (인재육성팀)</b><br>
+                <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
     # --- 화면 2: 상세 정보 (Detail) ---
     elif st.session_state.view == 'detail':
-        force_mobile_scroll_reset() # 상세 페이지 진입 시에도 무한 스크롤 강제 초기화
-        
         name = st.session_state.target
         item = program_data.get(name, {})
         
