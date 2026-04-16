@@ -10,34 +10,38 @@ import re
 # 1. 페이지 설정
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
-# --- [에러 방지 및 모바일 스크롤 초기화 스크립트] ---
-def apply_scroll_fix():
-    # 페이지가 바뀔 때마다 고유한 ID를 생성하여 스크립트 재실행 유도
-    view_key = f"{st.session_state.view}_{st.session_state.target}"
-    st.markdown(f"""
-        <div id="top-anchor-{view_key}" style="position:absolute; top:-100px;"></div>
-        <script>
-            (function() {{
-                const reset = () => {{
-                    const main = window.parent.document.querySelector('section.main');
-                    if (main) main.scrollTo({{top: 0, behavior: 'instant'}});
-                    window.parent.scrollTo(0, 0);
-                }};
-                // 즉시 실행 및 렌더링 후 지연 실행 (모바일 대응)
-                reset();
-                setTimeout(reset, 100);
-                setTimeout(reset, 300);
-            }})();
-        </script>
-    """, unsafe_allow_html=True)
-
 # 세션 상태 관리
 if 'view' not in st.session_state:
     st.session_state.view = 'home'
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 2. 이미지 base64 변환 (로컬 이미지 로드)
+# --- [상세보기 클릭 시 즉시 스크롤 리셋을 위한 특수 로직] ---
+def trigger_scroll():
+    # 뷰와 타겟 정보를 조합해 유니크한 키 생성 (페이지 이동 시마다 스크립트 강제 재실행)
+    scroll_key = f"scroll_trigger_{st.session_state.view}_{st.session_state.target}"
+    st.markdown(f"""
+        <div id="{scroll_key}"></div>
+        <script>
+            (function() {{
+                const scrollReset = () => {{
+                    // 스트림릿 메인 컨테이너 강제 타겟팅
+                    const mainContainer = window.parent.document.querySelector('.main');
+                    if (mainContainer) {{
+                        mainContainer.scrollTo({{top: 0, behavior: 'instant'}});
+                    }}
+                    window.parent.scrollTo(0, 0);
+                }};
+                // 즉시 실행 및 렌더링 직후 반복 실행 (모바일 브라우저 대응)
+                scrollReset();
+                setTimeout(scrollReset, 10);
+                setTimeout(scrollReset, 50);
+                setTimeout(scrollReset, 150);
+            }})();
+        </script>
+    """, unsafe_allow_html=True)
+
+# 2. 이미지 base64 변환
 def get_base64_img(file_path):
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
@@ -47,7 +51,7 @@ def get_base64_img(file_path):
 
 img_forest = get_base64_img("forest.jpg")
 
-# 3. 데이터 로드 (JSON 및 CSV)
+# 3. 데이터 로드
 def load_json_data():
     if os.path.exists("programs.json"):
         with open("programs.json", "r", encoding="utf-8") as f:
@@ -64,7 +68,7 @@ def load_member_data():
 
 program_data = load_json_data()
 
-# 4. 프리미엄 디자인 CSS (이미지 전체 적용 및 여백 최적화)
+# 4. 디자인 시스템 CSS
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
 st.markdown(f"""
@@ -72,19 +76,17 @@ st.markdown(f"""
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     .stApp {{ background-color: #FFFFFF; font-family: 'Pretendard', sans-serif; }}
     
-    /* 상단 잘림 방지 안전 여백 */
-    .block-container {{ padding-top: 2.5rem !important; padding-bottom: 5rem !important; }}
+    /* 최상단 마진 확보 */
+    .block-container {{ padding-top: 2rem !important; padding-bottom: 5rem !important; }}
     
-    /* 히어로 섹션 - 이미지 풀 적용 */
     .hero-section {{
         background: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
-        padding: 170px 30px 70px 30px; border-radius: 0 0 50px 50px;
-        color: white; text-align: left; margin: -6.5rem -2rem 2.5rem -2rem;
+        padding: 180px 30px 80px 30px; border-radius: 0 0 60px 60px;
+        color: white; text-align: left; margin: -6rem -2rem 2.5rem -2rem;
     }}
-    .hero-title {{ font-weight: 900; font-size: 50px; line-height: 1.1; letter-spacing: -2.5px; }}
+    .hero-title {{ font-weight: 900; font-size: 52px; line-height: 1.1; letter-spacing: -2.5px; }}
 
-    /* 프로그램 카드 디자인 (dotcle 스타일) */
     .program-card {{
         position: relative; height: 350px; border-radius: 40px;
         margin-bottom: 25px; overflow: hidden; background-size: cover;
@@ -105,11 +107,6 @@ st.markdown(f"""
     .member-box {{
         background-color: #F2F2F7; padding: 24px; border-radius: 28px;
         border: 1px solid #E5E5EA; margin-bottom: 40px;
-    }}
-
-    .contact-section {{
-        background-color: #F8F9FA; padding: 30px; border-radius: 30px;
-        border: 1px solid #E5E5EA; margin-top: 50px; text-align: center;
     }}
 
     .stButton>button {{
@@ -134,7 +131,7 @@ def navigate_to(view, target=None):
 
 # --- 화면 1: 홈 (Home) ---
 if st.session_state.view == 'home':
-    apply_scroll_fix() # 상단 이동 스크립트 실행
+    trigger_scroll() # 화면 진입 시 즉시 스크롤 리셋 실행
     
     st.markdown(f"""
     <div class="hero-section">
@@ -180,20 +177,9 @@ if st.session_state.view == 'home':
         if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
-    st.markdown(f"""
-    <div class="contact-section">
-        <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h5>
-        <p style="color:#3A3A3C; font-size:15px; line-height:1.6; margin-bottom:0;">
-            문의 사항은 아래로 연락주세요.<br>
-            <b>박성식 책임 (인재육성팀)</b><br>
-            <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
 # --- 화면 2: 상세 정보 (Detail) ---
 elif st.session_state.view == 'detail':
-    apply_scroll_fix() # 상세 진입 시 상단 이동 실행
+    trigger_scroll() # 상세 페이지 진입 시에도 즉시 스크롤 리셋 실행
     
     name = st.session_state.target
     item = program_data.get(name, {})
@@ -218,7 +204,6 @@ elif st.session_state.view == 'detail':
         <h5 style="margin-top:0; font-weight:800;">📝 상세 가이드</h5>
         {"".join([f'<div style="margin-bottom:12px; font-size:16px;">✅ {p}</div>' for p in item.get('points', [])])}
     </div>
-    <div style="margin-top:25px;"></div>
     """, unsafe_allow_html=True)
 
     nav_name = item.get('nav_name', name)
