@@ -18,25 +18,59 @@ if 'target' not in st.session_state:
 
 # --- [상세보기 클릭 시 즉시 스크롤 리셋을 위한 특수 로직] ---
 def trigger_scroll():
-    # 뷰와 타겟 정보를 조합해 유니크한 키 생성 (페이지 이동 시마다 스크립트 강제 재실행)
+    # 뷰와 타겟 정보를 조합해 유니크한 키 생성
     scroll_key = f"scroll_trigger_{st.session_state.view}_{st.session_state.target}"
     st.markdown(f"""
         <div id="{scroll_key}"></div>
         <script>
             (function() {{
                 const scrollReset = () => {{
-                    // 스트림릿 메인 컨테이너 강제 타겟팅
-                    const mainContainer = window.parent.document.querySelector('.main');
-                    if (mainContainer) {{
-                        mainContainer.scrollTo({{top: 0, behavior: 'instant'}});
-                    }}
-                    window.parent.scrollTo(0, 0);
+                    const doc = window.parent.document;
+
+                    // 모바일/PC 환경별로 실제 스크롤되는 후보들 전부 시도
+                    const candidates = [
+                        window.parent,
+                        window,
+                        doc.documentElement,
+                        doc.body,
+                        doc.scrollingElement,
+                        doc.querySelector('.main'),
+                        doc.querySelector('[data-testid="stAppViewContainer"]'),
+                        doc.querySelector('[data-testid="stAppViewContainer"] > section'),
+                        doc.querySelector('[data-testid="stMain"]'),
+                        doc.querySelector('.block-container')
+                    ];
+
+                    candidates.forEach((el) => {{
+                        if (!el) return;
+                        try {{
+                            if (typeof el.scrollTo === 'function') {{
+                                el.scrollTo(0, 0);
+                            }}
+                            el.scrollTop = 0;
+                        }} catch(e) {{}}
+                    }});
                 }};
-                // 즉시 실행 및 렌더링 직후 반복 실행 (모바일 브라우저 대응)
-                scrollReset();
-                setTimeout(scrollReset, 10);
-                setTimeout(scrollReset, 50);
-                setTimeout(scrollReset, 150);
+
+                // 모바일에서 렌더링이 늦는 경우가 있어서 여러 번 강제 실행
+                const delays = [0, 50, 150, 300, 600, 1000];
+                delays.forEach((delay) => setTimeout(scrollReset, delay));
+
+                // DOM 변화가 끝난 뒤 한 번 더 실행
+                let observerCount = 0;
+                const observer = new MutationObserver(() => {{
+                    scrollReset();
+                    observerCount += 1;
+                    if (observerCount > 10) observer.disconnect();
+                }});
+
+                try {{
+                    observer.observe(window.parent.document.body, {{
+                        childList: true,
+                        subtree: true
+                    }});
+                    setTimeout(() => observer.disconnect(), 1500);
+                }} catch(e) {{}}
             }})();
         </script>
     """, unsafe_allow_html=True)
