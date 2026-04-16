@@ -154,7 +154,6 @@ with app_container:
 
     # --- 화면 2: 상세 정보 (Detail) ---
     elif st.session_state.view == 'detail':
-        force_mobile_scroll_reset() # 상세 페이지 진입 시에도 무한 스크롤 강제 초기화
         
         name = st.session_state.target
         item = program_data.get(name, {})
