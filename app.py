@@ -10,41 +10,6 @@ import re
 # 1. 페이지 설정 (최상단 고정)
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
-# --- [모바일 스크롤 완전 해결을 위한 초강력 스크립트] ---
-def force_mobile_scroll_reset():
-    # 현재 뷰 상태에 따라 고유한 키 생성
-    view_id = f"nav-{st.session_state.view}-{st.session_state.target}".replace(" ", "-")
-    st.markdown(f"""
-        <div id="{view_id}" style="display:none;"></div>
-        <script>
-            (function() {{
-                const resetScroll = () => {{
-                    const containers = [
-                        window.parent.document.querySelector('.main'),
-                        window.parent.document.querySelector('.stApp'),
-                        window.parent.document,
-                        window
-                    ];
-                    containers.forEach(c => {{
-                        if (c && c.scrollTo) c.scrollTo({{top: 0, behavior: 'instant'}});
-                        if (c && c.scrollTop !== undefined) c.scrollTop = 0;
-                    }});
-                }};
-
-                // 모바일 브라우저가 화면을 그리는 0.5초 동안 60fps 간격으로 계속 스크롤을 0으로 고정
-                let start = null;
-                const step = (timestamp) => {{
-                    if (!start) start = timestamp;
-                    resetScroll();
-                    if (timestamp - start < 500) {{
-                        window.requestAnimationFrame(step);
-                    }}
-                }};
-                window.requestAnimationFrame(step);
-            }})();
-        </script>
-    """, unsafe_allow_html=True)
-
 # 2. 세션 상태 관리
 if 'view' not in st.session_state:
     st.session_state.view = 'home'
@@ -134,7 +99,9 @@ def navigate_to(view, target=None):
     st.rerun()
 
 # 전체 앱을 하나의 컨테이너로 감싸고, view 상태에 따라 key를 변경하여 DOM 강제 재생성
-app_container = st.container()
+app_container = st.container(
+   key=f"page-{st.session_state.view}-{st.session_state.target}"
+)
 
 with app_container:
     # --- 화면 1: 홈 (Home) ---
