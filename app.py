@@ -106,8 +106,7 @@ app_container = st.container(
 with app_container:
     # --- 화면 1: 홈 (Home) ---
     if st.session_state.view == 'home':
-        force_mobile_scroll_reset() # 화면 진입 시 즉시 강제 초기화
-        
+                
         st.markdown(f"""
         <div class="hero-section">
             <div class="hero-title">CEO Talk<sup>+</sup></div>
