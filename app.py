@@ -151,7 +151,7 @@ if st.session_state.view == 'home':
     # 담당자 연락처 섹션
     st.markdown(f"""
     <div class="contact-section">
-        <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h5>
+        <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 담당자 안내</h5>
         <p style="color:#3A3A3C; font-size:15px; line-height:1.6; margin-bottom:0;">
             불편 사항이나 문의 사항은 아래로 연락주세요.<br>
             <b>인재육성팀 김선화 팀장</b><br>
