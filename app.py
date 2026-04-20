@@ -7,7 +7,7 @@ import os
 import json
 import re
 
-# 1. 페이지 설정 (반드시 최상단)
+# 1. 페이지 설정 (반드시 코드 최상단)
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
 # 2. 세션 상태 관리
@@ -43,26 +43,17 @@ program_data, member_data = load_app_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 필수 CSS (좌우 흔들림 방지 및 모바일 고정 레이아웃)
-# 버벅임을 유발하는 스크롤 JS를 모두 삭제하고 가벼운 CSS만 남겼습니다.
+# 4. 필수 CSS (군더더기 없는 가벼운 디자인)
+# 스크롤 제어 및 좌우 고정 관련 모든 자바스크립트/CSS를 삭제했습니다.
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-    
-    /* [핵심] 모바일 좌우 흔들림(Wobble) 완전 차단 */
-    html, body, [data-testid="stAppViewContainer"], .main, .block-container {{
-        overflow-x: hidden !important;
-        width: 100% !important;
-        margin: 0 !important;
-        position: relative;
-    }}
     
     .stApp {{ font-family: 'Pretendard', sans-serif; }}
     
     .block-container {{
         padding-top: 2rem !important;
         padding-bottom: 5rem !important;
-        max-width: 100% !important;
     }}
 
     /* 히어로 섹션 */
@@ -74,7 +65,7 @@ st.markdown(f"""
     }}
     .hero-title {{ font-weight: 900; font-size: 46px; line-height: 1.1; letter-spacing: -2px; }}
 
-    /* 프로그램 카드 (이미지 전체 적용 디자인) */
+    /* 프로그램 카드 디자인 */
     .program-card {{
         position: relative; height: 320px; border-radius: 35px;
         margin-bottom: 25px; overflow: hidden; background-size: cover;
@@ -110,7 +101,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# 5. 내비게이션
+# 5. 내비게이션 함수
 def navigate_to(view, target=None):
     st.session_state.view = view
     st.session_state.target = target
@@ -118,7 +109,7 @@ def navigate_to(view, target=None):
 
 # --- 화면 렌더링 ---
 if st.session_state.view == 'home':
-    # [HOME]
+    # [HOME VIEW]
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk<sup>+</sup></div>
@@ -135,7 +126,10 @@ if st.session_state.view == 'home':
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     for name, info in program_data.items():
-        folium.Marker([info["lat"], info["lon"]], popup=name,
+        # 팝업 글자 크기를 13px로 조정
+        popup_html = f'<div style="font-size: 13px; font-weight: 600; font-family: Pretendard; color: #1C1C1E; text-align: center; width: 100px;">{name}</div>'
+        folium.Marker([info["lat"], info["lon"]], 
+                      popup=folium.Popup(popup_html, max_width=150),
                       icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
     
     map_res = st_folium(m, width="100%", height=350, key="home_map")
@@ -162,7 +156,8 @@ if st.session_state.view == 'home':
     st.markdown(f"""
     <div class="info-box" style="text-align:center; margin-top:30px;">
         <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h5>
-        <p style="color:#3A3A3C; font-size:15px; margin-bottom:0;">
+        <p style="color:#3A3A3C; font-size:15px; line-height:1.6; margin-bottom:0;">
+            문의 사항은 아래로 연락주세요.<br>
             <b>박성식 책임 (인재육성팀)</b><br>
             <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
         </p>
@@ -170,7 +165,7 @@ if st.session_state.view == 'home':
     """, unsafe_allow_html=True)
 
 elif st.session_state.view == 'detail':
-    # [DETAIL]
+    # [DETAIL VIEW]
     name = st.session_state.target
     item = program_data.get(name, {})
     
@@ -192,6 +187,7 @@ elif st.session_state.view == 'detail':
         <h3 style="margin-top:0; font-weight:800; font-size: 24px;">{item.get('detail_title')}</h3>
         <p style="font-size: 18px; color: #3A3A3C; line-height: 1.7;">{item.get('desc')}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 30px 0;">
+        <h5 style="margin-top:0; font-weight:800; font-size: 18px;">📝 상세 가이드</h5>
         {"".join([f'<div style="margin-bottom:12px; font-size:16px;">✅ {p}</div>' for p in item.get('points', [])])}
     </div>
     <div style="margin-top:25px;"></div>
