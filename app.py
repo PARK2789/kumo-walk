@@ -7,16 +7,16 @@ import os
 import json
 import re
 
-# 1. 페이지 설정 (가장 최상단)
+# 1. 페이지 설정
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
-# 세션 관리
+# 2. 세션 상태 관리 (단순 내비게이션)
 if 'view' not in st.session_state:
     st.session_state.view = 'home'
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 2. 이미지 base64 변환
+# 3. 데이터 로드 함수
 def get_base64_img(file_path):
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
@@ -24,40 +24,42 @@ def get_base64_img(file_path):
         return base64.b64encode(data).decode()
     return ""
 
-# 3. 데이터 로드
-def load_all_data():
-    prog = {}
+def load_data():
+    p_data = {}
     if os.path.exists("programs.json"):
         with open("programs.json", "r", encoding="utf-8") as f:
-            prog = json.load(f)
-    memb = {}
+            p_data = json.load(f)
+    m_data = {}
     if os.path.exists("members.csv"):
         try:
             df = pd.read_csv("members.csv")
-            memb = dict(zip(df['조'], df['명단']))
+            m_data = dict(zip(df['조'], df['명단']))
         except: pass
-    return prog, memb
+    return p_data, m_data
 
-program_data, member_data = load_all_data()
+def navigate_to(view, target=None):
+    st.session_state.view = view
+    st.session_state.target = target
+    st.rerun()
+
+program_data, member_data = load_data()
 img_forest = get_base64_img("forest.jpg")
-
-# 4. 프리미엄 CSS 및 모바일 고정 레이아웃
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
+# 4. 필수 CSS (좌우 흔들림 방지 및 가벼운 디자인)
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     
-    /* [핵심] 좌우 흔들림 원천 차단 */
+    /* [핵심] 모바일 좌우 흔들림(Wobble) 방지 */
     html, body, [data-testid="stAppViewContainer"] {{
         overflow-x: hidden !important;
+        position: relative;
         width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
     }}
-
     .stApp {{ font-family: 'Pretendard', sans-serif; }}
     
+    /* 기본 여백 설정 */
     .block-container {{
         padding-top: 2rem !important;
         padding-bottom: 5rem !important;
@@ -69,7 +71,7 @@ st.markdown(f"""
         background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('{hero_bg}');
         background-size: cover; background-position: center;
         padding: 160px 25px 60px 25px; border-radius: 0 0 50px 50px;
-        color: white; text-align: left; margin: -5.5rem -1.5rem 2.5rem -1.5rem;
+        color: white; text-align: left; margin: -5.5rem -1rem 2.5rem -1rem;
     }}
     .hero-title {{ font-weight: 900; font-size: 46px; line-height: 1.1; letter-spacing: -2px; }}
 
@@ -90,40 +92,31 @@ st.markdown(f"""
     .card-tag {{ font-size: 13px; font-weight: 700; opacity: 0.9; margin-bottom: 5px; }}
     .card-title {{ font-size: 26px; font-weight: 800; letter-spacing: -1px; }}
 
+    /* 정보 박스 */
     .info-box {{
         background-color: #F2F2F7; padding: 22px; border-radius: 25px;
         border: 1px solid #E5E5EA; margin-bottom: 35px;
     }}
 
+    /* 버튼 스타일 */
     .stButton>button {{
-        width: 100%; border-radius: 20px; background-color: #1C1C1E;
-        color: white; font-weight: 600; border: none; height: 4em;
+        width: 100%; border-radius: 18px; background-color: #1C1C1E;
+        color: white; font-weight: 600; border: none; height: 3.8em;
     }}
     
     /* 카카오맵 버튼 */
     div[data-testid="stLinkButton"] > a {{
-        width: 100% !important; border-radius: 20px !important; background-color: #FEE500 !important;
-        color: #191919 !important; font-weight: 700 !important; height: 4em !important;
+        width: 100% !important; border-radius: 18px !important; background-color: #FEE500 !important;
+        color: #191919 !important; font-weight: 700 !important; height: 3.8em !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
         text-decoration: none !important;
     }}
 </style>
-
-<script>
-    // 페이지 전환 시 최상단으로 스크롤 이동
-    window.parent.document.querySelector('section.main').scrollTo(0, 0);
-</script>
 """, unsafe_allow_html=True)
 
-# 5. 내비게이션
-def navigate_to(view, target=None):
-    st.session_state.view = view
-    st.session_state.target = target
-    st.rerun()
-
-# --- 화면 구성 ---
+# 5. 메인 로직
 if st.session_state.view == 'home':
-    # [HOME]
+    # [HOME 화면]
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk<sup>+</sup></div>
@@ -169,17 +162,17 @@ if st.session_state.view == 'home':
         <h5 style="margin-top:0; font-weight:800;">📞 행사 담당자 안내</h5>
         <p style="font-size:15px; color:#3A3A3C;">
             <b>박성식 책임 (인재육성팀)</b><br>
-            <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none;">010-1234-5678</a>
+            <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
         </p>
     </div>
     """, unsafe_allow_html=True)
 
 elif st.session_state.view == 'detail':
-    # [DETAIL]
+    # [상세 페이지]
     name = st.session_state.target
     item = program_data.get(name, {})
     
-    if st.button("← 메인 화면으로 돌아가기"):
+    if st.button("← 돌아가기"):
         navigate_to('home')
 
     img_raw = get_base64_img(item.get("bg_file", ""))
@@ -193,7 +186,7 @@ elif st.session_state.view == 'detail':
             <div style="font-size: 34px; font-weight: 900; line-height: 1.1;">{name}</div>
         </div>
     </div>
-    <div style="background-color: #F8F9FA; padding: 35px; border-radius: 35px; border: 1px solid #E5E5EA;">
+    <div style="background-color: #F8F9FA; padding: 35px; border-radius: 30px; border: 1px solid #E5E5EA;">
         <h3 style="margin-top:0; font-weight:800; font-size: 24px;">{item.get('detail_title')}</h3>
         <p style="font-size: 18px; color: #3A3A3C; line-height: 1.7;">{item.get('desc')}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 30px 0;">
