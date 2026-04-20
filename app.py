@@ -7,16 +7,16 @@ import os
 import json
 import re
 
-# 1. 페이지 설정 (반드시 코드 최상단)
+# 1. 페이지 설정 (반드시 최상단)
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
-# 2. 세션 상태 관리 (단순 화면 전환)
+# 2. 세션 상태 관리
 if 'view' not in st.session_state:
     st.session_state.view = 'home'
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 3. 데이터 로딩 및 이미지 처리
+# 3. 데이터 및 이미지 처리 함수
 def get_base64_img(file_path):
     if os.path.exists(file_path):
         try:
@@ -26,7 +26,7 @@ def get_base64_img(file_path):
         except: pass
     return ""
 
-def load_data():
+def load_app_data():
     p_data = {}
     if os.path.exists("programs.json"):
         with open("programs.json", "r", encoding="utf-8") as f:
@@ -39,26 +39,26 @@ def load_data():
         except: pass
     return p_data, m_data
 
-program_data, member_data = load_data()
+program_data, member_data = load_app_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 필수 CSS (좌우 흔들림 방지 및 모바일 레이아웃)
+# 4. 필수 CSS (좌우 흔들림 방지 및 모바일 고정 레이아웃)
+# 버벅임을 유발하는 스크롤 JS를 모두 삭제하고 가벼운 CSS만 남겼습니다.
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     
     /* [핵심] 모바일 좌우 흔들림(Wobble) 완전 차단 */
-    html, body, [data-testid="stAppViewContainer"], .main {{
+    html, body, [data-testid="stAppViewContainer"], .main, .block-container {{
         overflow-x: hidden !important;
         width: 100% !important;
         margin: 0 !important;
-        padding: 0 !important;
         position: relative;
     }}
+    
     .stApp {{ font-family: 'Pretendard', sans-serif; }}
     
-    /* 상단 여백 최적화 */
     .block-container {{
         padding-top: 2rem !important;
         padding-bottom: 5rem !important;
@@ -70,14 +70,14 @@ st.markdown(f"""
         background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
         padding: 160px 25px 60px 25px; border-radius: 0 0 50px 50px;
-        color: white; text-align: left; margin: -5.5rem -1.5rem 2.5rem -1.5rem;
+        color: white; text-align: left; margin: -5.5rem -1rem 2.5rem -1rem;
     }}
     .hero-title {{ font-weight: 900; font-size: 46px; line-height: 1.1; letter-spacing: -2px; }}
 
     /* 프로그램 카드 (이미지 전체 적용 디자인) */
     .program-card {{
         position: relative; height: 320px; border-radius: 35px;
-        margin-bottom: 20px; overflow: hidden; background-size: cover;
+        margin-bottom: 25px; overflow: hidden; background-size: cover;
         background-position: center; display: flex; flex-direction: column;
         justify-content: flex-end; padding: 35px; color: white;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -89,21 +89,18 @@ st.markdown(f"""
     }}
     .card-content {{ position: relative; z-index: 2; pointer-events: none; }}
     .card-tag {{ font-size: 13px; font-weight: 700; opacity: 0.9; margin-bottom: 5px; }}
-    .card-title {{ font-size: 26px; font-weight: 800; letter-spacing: -1px; }}
+    .card-title {{ font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1.2; }}
 
-    /* 정보 박스 스타일 */
     .info-box {{
         background-color: #F2F2F7; padding: 22px; border-radius: 25px;
         border: 1px solid #E5E5EA; margin-bottom: 35px;
     }}
 
-    /* 버튼 스타일 */
     .stButton>button {{
         width: 100%; border-radius: 18px; background-color: #1C1C1E;
         color: white; font-weight: 600; border: none; height: 3.8em; font-size: 16px;
     }}
     
-    /* 카카오맵 버튼 */
     div[data-testid="stLinkButton"] > a {{
         width: 100% !important; border-radius: 18px !important; background-color: #FEE500 !important;
         color: #191919 !important; font-weight: 700 !important; height: 3.8em !important;
@@ -113,19 +110,19 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# 5. 내비게이션 함수
+# 5. 내비게이션
 def navigate_to(view, target=None):
     st.session_state.view = view
     st.session_state.target = target
     st.rerun()
 
-# --- 화면 렌더링 시작 ---
+# --- 화면 렌더링 ---
 if st.session_state.view == 'home':
-    # [HOME 화면]
+    # [HOME]
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk<sup>+</sup></div>
-        <div style="font-size: 18px; opacity: 0.9; margin-top: 10px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
+        <div style="font-size: 19px; opacity: 0.9; margin-top: 10px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -173,7 +170,7 @@ if st.session_state.view == 'home':
     """, unsafe_allow_html=True)
 
 elif st.session_state.view == 'detail':
-    # [DETAIL 화면]
+    # [DETAIL]
     name = st.session_state.target
     item = program_data.get(name, {})
     
