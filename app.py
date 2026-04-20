@@ -7,7 +7,7 @@ import os
 import json
 import re
 
-# 1. 페이지 설정 (반드시 최상단에 위치)
+# 1. 페이지 설정 (반드시 코드 최상단에 위치)
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
 # 2. 세션 상태 관리 (단순 화면 전환용)
@@ -16,17 +16,19 @@ if 'view' not in st.session_state:
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 3. 유틸리티 함수
+# 3. 데이터 로드 및 이미지 처리 함수
 def get_base64_img(file_path):
-    """이미지 파일을 Base64로 인코딩하여 CSS/HTML에서 사용 가능하게 함"""
+    """이미지를 Base64로 인코딩하여 CSS 배경으로 사용"""
     if os.path.exists(file_path):
-        with open(file_path, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
+        try:
+            with open(file_path, "rb") as f:
+                data = f.read()
+            return base64.b64encode(data).decode()
+        except: pass
     return ""
 
-def load_data():
-    """JSON 및 CSV 데이터 로드"""
+def load_all_data():
+    """JSON 프로그램 정보 및 CSV 조원 명단 로드"""
     p_data = {}
     if os.path.exists("programs.json"):
         with open("programs.json", "r", encoding="utf-8") as f:
@@ -40,24 +42,18 @@ def load_data():
         except: pass
     return p_data, m_data
 
-def navigate_to(view, target=None):
-    """화면 이동 함수 (빠른 전환을 위해 최소화)"""
-    st.session_state.view = view
-    st.session_state.target = target
-    st.rerun()
-
-# 데이터 로딩
-program_data, member_data = load_data()
+program_data, member_data = load_all_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 고정 CSS (좌우 흔들림 방지 및 폰트 설정)
+# 4. 필수 CSS (좌우 흔들림 방지 및 고정 레이아웃)
+# 복잡한 JS 스크롤 코드는 모두 삭제했습니다.
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     
-    /* [핵심] 모바일 좌우 흔들림 완전 차단 */
-    html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{
+    /* [핵심] 모바일 좌우 흔들림(Wobble) 완전 차단 */
+    html, body, [data-testid="stAppViewContainer"], .main {{
         overflow-x: hidden !important;
         width: 100vw !important;
         margin: 0 !important;
@@ -65,29 +61,28 @@ st.markdown(f"""
         position: relative;
     }}
     
-    .stApp {{ font-family: 'Pretendard', sans-serif; overflow-x: hidden !important; }}
+    .stApp {{ font-family: 'Pretendard', sans-serif; }}
     
-    /* 기본 여백 최적화 */
+    /* 기본 여백 설정 */
     .block-container {{
         padding-top: 2rem !important;
         padding-bottom: 5rem !important;
         max-width: 100% !important;
-        overflow-x: hidden !important;
     }}
 
     /* 히어로 섹션 */
     .hero-section {{
         background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
-        padding: 160px 25px 60px 25px; border-radius: 0 0 45px 45px;
+        padding: 160px 25px 60px 25px; border-radius: 0 0 50px 50px;
         color: white; text-align: left; margin: -5.5rem -1rem 2.5rem -1rem;
     }}
     .hero-title {{ font-weight: 900; font-size: 46px; line-height: 1.1; letter-spacing: -2px; }}
 
-    /* 프로그램 카드 (이미지 전체 배경) */
+    /* 프로그램 카드 (이미지 전체 배경 스타일) */
     .program-card {{
         position: relative; height: 320px; border-radius: 35px;
-        margin-bottom: 20px; overflow: hidden; background-size: cover;
+        margin-bottom: 25px; overflow: hidden; background-size: cover;
         background-position: center; display: flex; flex-direction: column;
         justify-content: flex-end; padding: 35px; color: white;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -101,7 +96,7 @@ st.markdown(f"""
     .card-tag {{ font-size: 13px; font-weight: 700; opacity: 0.9; margin-bottom: 5px; }}
     .card-title {{ font-size: 26px; font-weight: 800; letter-spacing: -1px; }}
 
-    /* 정보 박스 */
+    /* 조원/정보 박스 */
     .info-box {{
         background-color: #F2F2F7; padding: 22px; border-radius: 25px;
         border: 1px solid #E5E5EA; margin-bottom: 35px;
@@ -114,7 +109,7 @@ st.markdown(f"""
     }}
     .stButton>button:active {{ transform: scale(0.98); }}
     
-    /* 카카오맵 버튼 */
+    /* 카카오맵 버튼 커스텀 */
     div[data-testid="stLinkButton"] > a {{
         width: 100% !important; border-radius: 18px !important; background-color: #FEE500 !important;
         color: #191919 !important; font-weight: 700 !important; height: 3.8em !important;
@@ -124,9 +119,15 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# 5. 메인 화면 로직
+# 5. 내비게이션 로직
+def navigate_to(view, target=None):
+    st.session_state.view = view
+    st.session_state.target = target
+    st.rerun()
+
+# --- 화면 렌더링 시작 ---
 if st.session_state.view == 'home':
-    # --- [HOME VIEW] ---
+    # [HOME 화면]
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk<sup>+</sup></div>
@@ -134,26 +135,28 @@ if st.session_state.view == 'home':
     </div>
     """, unsafe_allow_html=True)
 
-    # 조원 확인 섹션
+    # 1. 조원 확인
     st.markdown("#### 👥 우리 조원 확인")
     if member_data:
         sel = st.selectbox("조 선택", ["조를 선택해 주세요"] + list(member_data.keys()), label_visibility="collapsed")
         if sel != "조를 선택해 주세요":
             st.markdown(f'<div class="info-box"><b>{sel} 멤버 명단</b><br>{member_data[sel]}</div>', unsafe_allow_html=True)
+    else:
+        st.info("members.csv 파일을 준비해주세요.")
 
-    # 지도 섹션
+    # 2. 지도 안내
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     for name, info in program_data.items():
         folium.Marker([info["lat"], info["lon"]], popup=name,
                       icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
     
-    map_res = st_folium(m, width="100%", height=350, key="main_map")
+    map_res = st_folium(m, width="100%", height=350, key="home_map")
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked = re.sub('<[^<]+?>', '', map_res["last_object_clicked_popup"]).strip()
         if clicked in program_data: navigate_to('detail', clicked)
 
-    # 프로그램 카드 리스트
+    # 3. 프로그램 리스트
     st.markdown('<h4 style="margin-top:40px; margin-bottom:20px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
         img_raw = get_base64_img(info.get("bg_file", ""))
@@ -170,7 +173,7 @@ if st.session_state.view == 'home':
         if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
-    # 하단 담당자 연락처
+    # 하단 담당자 정보
     st.markdown(f"""
     <div class="info-box" style="text-align:center; margin-top:30px;">
         <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h5>
@@ -183,15 +186,13 @@ if st.session_state.view == 'home':
     """, unsafe_allow_html=True)
 
 elif st.session_state.view == 'detail':
-    # --- [DETAIL VIEW] ---
+    # [DETAIL 화면]
     name = st.session_state.target
     item = program_data.get(name, {})
     
-    # 상단 돌아가기 버튼
     if st.button("← 메인 화면으로 돌아가기"):
         navigate_to('home')
 
-    # 상세 헤더 이미지 (이미지 풀 배경)
     img_raw = get_base64_img(item.get("bg_file", ""))
     bg_url = f"data:image/jpeg;base64,{img_raw}" if img_raw else ""
     st.markdown(f"""
@@ -213,10 +214,7 @@ elif st.session_state.view == 'detail':
     <div style="margin-top:25px;"></div>
     """, unsafe_allow_html=True)
 
-    # 카카오맵 좌표 기반 길찾기
     nav_url = f"https://map.kakao.com/link/to/{item.get('nav_name', name)},{item.get('lat')},{item.get('lon')}"
     st.link_button("📍 이 지점 길찾기 (카카오맵)", nav_url)
 
-# 공통 푸터
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:11px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
-
