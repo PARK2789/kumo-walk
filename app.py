@@ -73,7 +73,7 @@ st.markdown(f"""
     /* 프로그램 카드 디자인 */
     .program-card {{
         position: relative; height: 320px; border-radius: 35px;
-        margin-bottom: 25px; overflow: hidden; background-size: cover;
+        margin-bottom: 10px; overflow: hidden; background-size: cover;
         background-position: center; display: flex; flex-direction: column;
         justify-content: flex-end; padding: 35px; color: white;
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
