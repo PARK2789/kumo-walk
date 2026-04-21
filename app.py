@@ -68,16 +68,16 @@ st.markdown(f"""
     }}
     .hero-title {{ font-weight: 900; font-size: 46px; line-height: 1.1; letter-spacing: -2px; }}
 
-    /* 정보 박스 스타일 (출발 안내, 조원 확인 등) */
+    /* 정보 박스 스타일 */
     .info-box {{
-        background-color: #F2F2F7; padding: 22px; border-radius: 25px;
+        background-color: #F2F2F7; padding: 22px; border-radius: 28px;
         border: 1px solid #E5E5EA; margin-bottom: 20px;
     }}
 
-    /* 프로그램 카드 디자인 (버튼과의 간격을 5px로 축소) */
+    /* 프로그램 카드 디자인 (간격 축소) */
     .program-card {{
         position: relative; height: 320px; border-radius: 35px;
-        margin-bottom: 5px; 
+        margin-bottom: 10px; 
         overflow: hidden; background-size: cover;
         background-position: center; display: flex; flex-direction: column;
         justify-content: flex-end; padding: 35px; color: white;
@@ -92,16 +92,16 @@ st.markdown(f"""
     .card-tag {{ font-size: 13px; font-weight: 700; opacity: 0.9; margin-bottom: 5px; }}
     .card-title {{ font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1.2; }}
 
-    /* 버튼 스타일 (높이를 3.2em으로 슬림하게 조정) */
+    /* 버튼 스타일 (슬림 높이) */
     .stButton>button {{
         width: 100%; border-radius: 18px; background-color: #1C1C1E;
         color: white; font-weight: 600; border: none; 
-        height: 3em; 
+        height: 3.2em; 
         font-size: 16px;
-        margin-bottom: 25px; /* 다음 카드와의 간격 */
+        margin-bottom: 25px;
     }}
     
-    /* 네이버/카카오 지도 버튼 공통 스타일 */
+    /* 지도 링크 버튼 공통 스타일 */
     .nav-btn {{
         width: 100%; border-radius: 18px; 
         height: 3.6em; display: flex; align-items: center; 
@@ -130,19 +130,19 @@ if st.session_state.view == 'home':
     </div>
     """, unsafe_allow_html=True)
 
-    # 1. 출발 안내 (두 개의 독립된 박스)
+    # 1. 출발 안내
     st.markdown("#### 🚌 출발 안내")
     st.markdown(f"""
     <div class="info-box">
-        <div style="font-weight:800; color:#007AFF; font-size:17px; margin-bottom:8px;">📍 구미 4공장 출발</div>
-        <div style="font-size:15px; color:#1C1C1E; font-weight:600;">탑승 장소: 정문 앞</div>
-        <div style="font-size:15px; color:#3A3A3C; font-weight:600; margin-top:4px;">출발 시간: <b>15:20까지 집결</b></div>
+        <div style="font-weight:800; color:#007AFF; font-size:15px; margin-bottom:8px;">📍 구미 4공장 출발</div>
+        <div style="font-size:17px; color:#1C1C1E; font-weight:600;">탑승 장소: 정문 앞</div>
+        <div style="font-size:16px; color:#3A3A3C; margin-top:4px;">출발 시간: <b>15:20까지 집결</b></div>
     </div>
     <div class="info-box">
-        <div style="font-weight:800; color:#007AFF; font-size:17px; margin-bottom:8px;">📍 구미 1A 공장 출발</div>
-        <div style="font-size:15px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
-        <div style="font-size:15px; color:#3A3A3C; font-weight:600; margin-top:4px;">출발 시간: <b>15:35까지 집결</b></div>
-        <div style="font-size:15px; color:#8E8E93; margin-top:8px;">※ ID Card 태깅 & 출입게이트 통과 후 대기</div>
+        <div style="font-weight:800; color:#007AFF; font-size:15px; margin-bottom:8px;">📍 구미 1A 공장 출발</div>
+        <div style="font-size:17px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
+        <div style="font-size:16px; color:#3A3A3C; margin-top:4px;">출발 시간: <b>15:35까지 집결</b></div>
+        <div style="font-size:13px; color:#8E8E93; margin-top:8px;">※ ID Card 태깅 & 출입게이트 통과 후 대기</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -153,7 +153,7 @@ if st.session_state.view == 'home':
         if sel != "조를 선택해 주세요":
             st.markdown(f'<div class="info-box"><b>{sel} 멤버 명단</b><br>{member_data[sel]}</div>', unsafe_allow_html=True)
 
-    # 3. 지도 안내 (모든 지점 표시)
+    # 3. 지도 안내
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     for name, info in program_data.items():
@@ -167,7 +167,7 @@ if st.session_state.view == 'home':
         clicked = re.sub('<[^<]+?>', '', map_res["last_object_clicked_popup"]).strip()
         if clicked in program_data: navigate_to('detail', clicked)
 
-    # 4. 프로그램 가이드 (Refresh 항목 제외)
+    # 4. 프로그램 가이드 (Refresh 제외)
     st.markdown('<h4 style="margin-top:40px; margin-bottom:20px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
         if "Refresh" in name or "휴식" in name:
@@ -184,7 +184,7 @@ if st.session_state.view == 'home':
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button(f"상세보기", key=f"btn_{name}"):
+        if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
     # 담당자 연락처
@@ -203,9 +203,7 @@ elif st.session_state.view == 'detail':
     name = st.session_state.target
     item = program_data.get(name, {})
     
-    if st.button("← 메인 화면으로 돌아가기"):
-        navigate_to('home')
-
+    # 1. 상세 이미지 헤더
     img_raw = get_base64_img(item.get("bg_file", ""))
     bg_url = f"data:image/jpeg;base64,{img_raw}" if img_raw else ""
     st.markdown(f"""
@@ -222,10 +220,12 @@ elif st.session_state.view == 'detail':
         <p style="font-size: 18px; color: #3A3A3C; line-height: 1.7;">{item.get('desc')}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 30px 0;">
         <h5 style="margin-top:0; font-weight:800; font-size: 18px;">📝 상세 가이드</h5>
-        {"".join([f'<div style="margin-bottom:12px; font-size:16px;"> {p}</div>' for p in item.get('points', [])])}
+        {"".join([f'<div style="margin-bottom:12px; font-size:16px;">• {p}</div>' for p in item.get('points', [])])}
     </div>
     
-    <div style="margin-top:30px;">
+    # 2. 지도 길찾기 버튼
+    st.markdown(f"""
+    <div style="margin-top:30px; margin-bottom:15px;">
         <a href="https://map.naver.com/v5/search/{item.get('nav_name', name)}" target="_blank" class="nav-btn naver-btn">
             📍 네이버 지도로 길찾기
         </a>
@@ -235,5 +235,8 @@ elif st.session_state.view == 'detail':
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:11px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
+    # 3. 돌아가기 버튼 (하단으로 이동)
+    if st.button("← 메인 화면으로 돌아가기"):
+        navigate_to('home')
 
+st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:11px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
