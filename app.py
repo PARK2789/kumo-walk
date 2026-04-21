@@ -43,7 +43,7 @@ program_data, member_data = load_app_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 프리미엄 CSS (디자인 유지 및 버벅임 방지)
+# 4. 필수 CSS (군더더기 없는 가벼운 디자인)
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -92,9 +92,10 @@ st.markdown(f"""
         color: white; font-weight: 600; border: none; height: 3.8em; font-size: 16px;
     }}
     
+    /* 네이버 지도 버튼 스타일 */
     div[data-testid="stLinkButton"] > a {{
-        width: 100% !important; border-radius: 18px !important; background-color: #FEE500 !important;
-        color: #191919 !important; font-weight: 700 !important; height: 3.8em !important;
+        width: 100% !important; border-radius: 18px !important; background-color: #03C75A !important;
+        color: #FFFFFF !important; font-weight: 700 !important; height: 3.8em !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
         text-decoration: none !important; font-size: 16px !important;
     }}
@@ -113,27 +114,27 @@ if st.session_state.view == 'home':
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk⁺</div>
-        <div style="font-size: 19px; opacity: 0.9; margin-top: 10px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
+        <div style="font-size: 19px; opacity: 0.9; margin-top: 10px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래</div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 1. 버스 안내 (분리된 두 개의 박스로 수정)
-    st.markdown("#### 🚌 출발 안내 (시간 엄수!!)")
+    # 1. 버스 안내 (분리된 두 개의 박스)
+    st.markdown("#### 🚌 출발 안내")
     
     st.markdown(f"""
     <div class="info-box">
         <div style="font-weight:800; color:#007AFF; font-size:17px; margin-bottom:8px;">📍 구미 4공장 출발</div>
         <div style="font-size:15px; color:#1C1C1E; font-weight:600;">탑승 장소: 정문 앞</div>
-        <div style="font-size:15px; color:#3A3A3C; margin-top:4px;">출발 시간: <b>15:20까지 집결</b></div>
+        <div style="font-size:15px; color:#3A3A3C; font-weight:600; margin-top:4px;">출발 시간: <b>15:20까지 집결</b></div>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown(f"""
     <div class="info-box">
-       <div style="font-weight:800; color:#007AFF; font-size:17px; margin-bottom:4px;">📍 구미 1A 공장 출발</div>
-       <div style="font-size:15px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
-       <div style="font-size:15px; color:#3A3A3C;">출발 시간: <b>15:35까지 집결</b></div>
-       <div style="font-size:15px; color:#3A3A3C;">※ID Card 태깅 & 출입게이트 통과 후, 매점 앞 대기</div>
+        <div style="font-weight:800; color:#007AFF; font-size:17px; margin-bottom:8px;">📍 구미 1A 공장 출발</div>
+        <div style="font-size:15px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
+        <div style="font-size:15px; color:#3A3A3C; font-weight:600; margin-top:4px;">출발 시간: <b>15:35까지 집결</b></div>
+        <div style="font-size:15px; color:#8E8E93; margin-top:8px;">※ ID Card 태깅 & 출입게이트 통과 후 대기</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -148,7 +149,6 @@ if st.session_state.view == 'home':
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     for name, info in program_data.items():
-        # 팝업 글자 크기 보정 (13px)
         popup_html = f'<div style="font-size: 13px; font-weight: 600; font-family: Pretendard; color: #1C1C1E; text-align: center; width: 100px;">{name}</div>'
         folium.Marker([info["lat"], info["lon"]], 
                       popup=folium.Popup(popup_html, max_width=150),
@@ -162,7 +162,6 @@ if st.session_state.view == 'home':
     # 4. 프로그램 리스트 (Refresh 항목 필터링)
     st.markdown('<h4 style="margin-top:40px; margin-bottom:20px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
-        # 'Refresh' 또는 '휴식' 단어가 들어간 항목은 하단 리스트에서 제외
         if "Refresh" in name or "휴식" in name:
             continue
             
@@ -214,13 +213,14 @@ elif st.session_state.view == 'detail':
         <h3 style="margin-top:0; font-weight:800; font-size: 24px;">{item.get('detail_title')}</h3>
         <p style="font-size: 18px; color: #3A3A3C; line-height: 1.7;">{item.get('desc')}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 30px 0;">
-        {"".join([f'<div style="margin-bottom:12px; font-size:16px;"> {p}</div>' for p in item.get('points', [])])}
+        {"".join([f'<div style="margin-bottom:12px; font-size:16px;">• {p}</div>' for p in item.get('points', [])])}
     </div>
     <div style="margin-top:25px;"></div>
     """, unsafe_allow_html=True)
 
-    nav_url = f"https://map.kakao.com/link/to/{item.get('nav_name', name)},{item.get('lat')},{item.get('lon')}"
-    st.link_button("📍 이 지점 길찾기 (카카오맵)", nav_url)
+    # 네이버 지도 검색 URL로 변경
+    nav_url = f"https://map.naver.com/v5/search/{item.get('nav_name', name)}"
+    st.link_button("📍 이 지점 길찾기 (네이버지도)", nav_url)
 
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:11px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
 
