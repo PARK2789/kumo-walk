@@ -202,7 +202,7 @@ elif st.session_state.view == 'detail':
     bg_url = f"data:image/jpeg;base64,{img_raw}" if img_raw else ""
     st.markdown(f"""
     <div style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.5)), url('{bg_url}'); 
-                background-size: cover; background-position: center; height: 150px; 
+                background-size: cover; background-position: center; height: 50px; 
                 border-radius: 30px; margin: 15px 0; display: flex; align-items: flex-end; padding: 30px;">
         <div style="color: white;">
             <div style="font-size: 13px; font-weight: 700; opacity: 0.8;">{item.get('tag')}</div>
