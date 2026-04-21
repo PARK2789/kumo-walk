@@ -16,7 +16,7 @@ if 'view' not in st.session_state:
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 3. 이미지 처리 함수 (캐싱 적용으로 렉 방지)
+# 3. 데이터 로딩 및 이미지 처리 (캐싱 적용으로 렉 방지)
 @st.cache_data
 def get_base64_img(file_path):
     if os.path.exists(file_path):
@@ -47,39 +47,44 @@ program_data, member_data = load_app_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 프리미엄 CSS (상단 고정 및 여백 완전 제어)
+# 4. 프리미엄 CSS (여백 최소화 및 카드 높이 축소)
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     
     .stApp {{ font-family: 'Pretendard', sans-serif; }}
     
-    /* [핵심] 스트림릿 기본 상단 공백 제거 */
-    [data-testid="stHeader"] {{
-        display: none !important;
+    /* 모바일 가로 흔들림 방지 */
+    html, body, [data-testid="stAppViewContainer"] {{
+        overflow-x: hidden !important;
+        width: 100% !important;
     }}
-    
-    .main .block-container {{
-        padding-top: 0px !important;
-        padding-bottom: 2rem !important;
+
+    /* [수정] 하단 여백을 극도로 줄여 스크롤 붕 뜨는 현상 방지 */
+    .block-container {{
+        padding-top: 2rem !important;
+        padding-bottom: 0.5rem !important; 
         max-width: 100% !important;
     }}
 
-    /* 히어로 섹션 (홈 화면 상단) */
+    /* 히어로 섹션 */
     .hero-section {{
         background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
-        padding: 120px 25px 40px 25px; 
-        border-radius: 0 0 40px 40px;
-        color: white; text-align: left; 
-        margin: 0rem -1rem 2rem -1rem; /* 상단 마진을 0으로 고정 */
+        padding: 150px 25px 50px 25px; border-radius: 0 0 40px 40px;
+        color: white; text-align: left; margin: -5.5rem -1rem 2rem -1rem;
     }}
-    .hero-title {{ font-weight: 900; font-size: 40px; line-height: 1.1; letter-spacing: -2px; }}
+    .hero-title {{ font-weight: 900; font-size: 46px; line-height: 1.1; letter-spacing: -2px; }}
 
-    /* [수정] 프로그램 카드 높이 축소 (220px) */
+    .info-box {{
+        background-color: #F2F2F7; padding: 22px; border-radius: 25px;
+        border: 1px solid #E5E5EA; margin-bottom: 20px;
+    }}
+
+    /* [수정] 이미지 카드 높이 축소 (320px -> 200px) */
     .program-card {{
-        position: relative; height: 220px; border-radius: 30px;
-        margin-bottom: 10px; 
+        position: relative; height: 200px; border-radius: 30px;
+        margin-bottom: 8px; 
         overflow: hidden; background-size: cover;
         background-position: center; display: flex; flex-direction: column;
         justify-content: flex-end; padding: 25px; color: white;
@@ -87,23 +92,18 @@ st.markdown(f"""
     }}
     .card-overlay {{
         position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-        background: linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(0,0,0,0.8) 100%);
+        background: linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(0,0,0,0.85) 100%);
         z-index: 1;
     }}
     .card-content {{ position: relative; z-index: 2; pointer-events: none; }}
     .card-tag {{ font-size: 12px; font-weight: 700; opacity: 0.9; margin-bottom: 3px; }}
-    .card-title {{ font-size: 22px; font-weight: 800; letter-spacing: -0.8px; }}
+    .card-title {{ font-size: 24px; font-weight: 800; letter-spacing: -1px; }}
 
-    .info-box {{
-        background-color: #F2F2F7; padding: 20px; border-radius: 24px;
-        border: 1px solid #E5E5EA; margin-bottom: 20px;
-    }}
-
-    /* 버튼 스타일 (높이 3.2em) */
+    /* 상세보기 버튼 슬림화 */
     .stButton>button {{
         width: 100%; border-radius: 16px; background-color: #1C1C1E;
         color: white; font-weight: 600; border: none; 
-        height: 3.2em; font-size: 15px; margin-bottom: 25px;
+        height: 3em; font-size: 15px; margin-bottom: 25px;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -116,11 +116,11 @@ def navigate_to(view, target=None):
 
 # --- 화면 렌더링 ---
 if st.session_state.view == 'home':
-    # [HOME]
+    # [HOME VIEW]
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk⁺</div>
-        <div style="font-size: 17px; opacity: 0.9; margin-top: 8px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
+        <div style="font-size: 19px; opacity: 0.9; margin-top: 10px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -128,14 +128,14 @@ if st.session_state.view == 'home':
     st.markdown("#### 🚌 출발 안내")
     st.markdown(f"""
     <div class="info-box">
-        <div style="font-weight:800; color:#007AFF; font-size:14px; margin-bottom:6px;">📍 구미 4공장 출발</div>
-        <div style="font-size:16px; color:#1C1C1E; font-weight:600;">탑승 장소: 정문 앞</div>
-        <div style="font-size:15px; color:#3A3A3C;">출발 시간: <b>15:20까지 집결</b></div>
+        <div style="font-weight:800; color:#007AFF; font-size:15px; margin-bottom:8px;">📍 구미 4공장 출발</div>
+        <div style="font-size:17px; color:#1C1C1E; font-weight:600;">탑승 장소: 정문 앞</div>
+        <div style="font-size:16px; color:#3A3A3C; margin-top:4px;">출발 시간: <b>15:20까지 집결</b></div>
     </div>
     <div class="info-box">
-        <div style="font-weight:800; color:#007AFF; font-size:14px; margin-bottom:6px;">📍 구미 1A 공장 출발</div>
-        <div style="font-size:16px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
-        <div style="font-size:15px; color:#3A3A3C;">출발 시간: <b>15:35까지 집결</b></div>
+        <div style="font-weight:800; color:#007AFF; font-size:15px; margin-bottom:8px;">📍 구미 1A 공장 출발</div>
+        <div style="font-size:17px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
+        <div style="font-size:16px; color:#3A3A3C; margin-top:4px;">출발 시간: <b>15:35까지 집결</b></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -160,7 +160,7 @@ if st.session_state.view == 'home':
         clicked = re.sub('<[^<]+?>', '', map_res["last_object_clicked_popup"]).strip()
         if clicked in program_data: navigate_to('detail', clicked)
 
-    # 4. 프로그램 가이드 (Refresh 제외)
+    # 4. 프로그램 리스트 (Refresh 제외)
     st.markdown('<h4 style="margin-top:40px; margin-bottom:20px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
         if "Refresh" in name or "휴식" in name:
@@ -181,36 +181,34 @@ if st.session_state.view == 'home':
             navigate_to('detail', name)
 
 elif st.session_state.view == 'detail':
-    # [상세 페이지]
+    # [DETAIL VIEW]
     name = st.session_state.target
     item = program_data.get(name, {})
     
-    # [수정] 상세 이미지 높이 150px로 축소 및 상단 마진 0 고정
+    # [수정] 상세 이미지 높이 180px로 축소
     img_raw = get_base64_img(item.get("bg_file", ""))
     bg_url = f"data:image/jpeg;base64,{img_raw}" if img_raw else ""
     st.markdown(f"""
     <div style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.5)), url('{bg_url}'); 
-                background-size: cover; background-position: center; height: 150px; 
-                border-radius: 0 0 30px 30px; margin: 0rem -1rem 1.5rem -1rem; 
-                display: flex; align-items: flex-end; padding: 25px;">
+                background-size: cover; background-position: center; height: 180px; 
+                border-radius: 30px; margin: 15px 0; display: flex; align-items: flex-end; padding: 30px;">
         <div style="color: white;">
-            <div style="font-size: 12px; font-weight: 700; opacity: 0.8;">{item.get('tag')}</div>
-            <div style="font-size: 26px; font-weight: 900; line-height: 1.1;">{name}</div>
+            <div style="font-size: 13px; font-weight: 700; opacity: 0.8;">{item.get('tag')}</div>
+            <div style="font-size: 28px; font-weight: 900; line-height: 1.1;">{name}</div>
         </div>
     </div>
-    <div style="background-color: #F8F9FA; padding: 25px; border-radius: 25px; border: 1px solid #E5E5EA;">
-        <h3 style="margin-top:0; font-weight:800; font-size: 20px;">{item.get('detail_title')}</h3>
-        <p style="font-size: 16px; color: #3A3A3C; line-height: 1.6;">{item.get('desc')}</p>
-        <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 20px 0;">
-        <h5 style="margin-top:0; font-weight:800; font-size: 17px;">📝 상세 가이드</h5>
-        {"".join([f'<div style="margin-bottom:10px; font-size:15px;">• {p}</div>' for p in item.get('points', [])])}
+    <div style="background-color: #F8F9FA; padding: 30px; border-radius: 25px; border: 1px solid #E5E5EA;">
+        <h3 style="margin-top:0; font-weight:800; font-size: 22px;">{item.get('detail_title')}</h3>
+        <p style="font-size: 17px; color: #3A3A3C; line-height: 1.6;">{item.get('desc')}</p>
+        <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 25px 0;">
+        <h5 style="margin-top:0; font-weight:800; font-size: 18px;">📝 상세 가이드</h5>
+        {"".join([f'<div style="margin-bottom:12px; font-size:16px;"> {p}</div>' for p in item.get('points', [])])}
     </div>
     <div style="margin-top:30px;"></div>
     """, unsafe_allow_html=True)
 
-    # 하단 돌아가기 버튼
+    # 돌아가기 버튼 (하단 배치)
     if st.button("← 메인 화면으로 돌아가기"):
         navigate_to('home')
 
 st.markdown("<p style='text-align:center; color:#C7C7CC; font-size:11px; margin-top:20px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
-
