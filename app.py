@@ -187,7 +187,7 @@ elif st.session_state.view == 'detail':
     # 이미지 카드 마진 대폭 축소 (20px -> 5px)
     st.markdown(f"""
     <div style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.5)), url('{bg_url}'); 
-                background-size: cover; background-position: center; height: 180px; 
+                background-size: cover; background-position: center; height: 120px; 
                 border-radius: 28px; margin: 5px 0 10px 0; display: flex; align-items: flex-end; padding: 25px;">
         <div style="color: white;">
             <div style="font-size: 12px; font-weight: 700; opacity: 0.8;">{item.get('tag')}</div>
