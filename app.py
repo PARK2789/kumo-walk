@@ -176,7 +176,7 @@ if st.session_state.view == 'home':
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button(f"{name} 상세보기", key=f"btn_{name}"):
+        if st.button(f"상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
     st.markdown(f"""
