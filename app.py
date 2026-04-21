@@ -118,8 +118,7 @@ if st.session_state.view == 'home':
             <div style="font-weight:800; color:#007AFF; font-size:14px; margin-bottom:4px;">📍 구미 4공장 출발</div>
             <div style="font-size:16px; color:#1C1C1E; font-weight:600;">탑승 장소: 정문 앞</div>
             <div style="font-size:15px; color:#3A3A3C;">출발 시간: <b>15:20까지 집결</b></div>
-        </div>
-        
+        </div>        
         <div class="bus-card" style="margin-bottom:0;">
             <div style="font-weight:800; color:#007AFF; font-size:14px; margin-bottom:4px;">📍 구미 1A 공장 출발</div>
             <div style="font-size:16px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
