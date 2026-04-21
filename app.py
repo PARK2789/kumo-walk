@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import folium
@@ -7,7 +8,7 @@ import os
 import json
 import re
 
-# 1. 페이지 설정 (반드시 최상단 배치)
+# 1. 페이지 설정 (최상단)
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
 # 2. 세션 상태 관리
@@ -43,17 +44,12 @@ program_data, member_data = load_app_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 필수 CSS (군더더기 제거, 표준 레이아웃)
+# 4. 필수 CSS (군더더기 없는 가벼운 디자인)
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-    
     .stApp {{ font-family: 'Pretendard', sans-serif; }}
-    
-    .block-container {{
-        padding-top: 2rem !important;
-        padding-bottom: 5rem !important;
-    }}
+    .block-container {{ padding-top: 2rem !important; padding-bottom: 5rem !important; }}
 
     /* 히어로 섹션 */
     .hero-section {{
@@ -64,16 +60,9 @@ st.markdown(f"""
     }}
     .hero-title {{ font-weight: 900; font-size: 46px; line-height: 1.1; letter-spacing: -2px; }}
 
-    /* 공통 박스 스타일 (조원, 버스안내 등) */
-    .info-box {{
-        background-color: #F2F2F7; padding: 22px; border-radius: 25px;
-        border: 1px solid #E5E5EA; margin-bottom: 25px;
-    }}
-    .bus-card {{
-        background-color: #FFFFFF; padding: 18px; border-radius: 20px;
-        border: 1px solid #E5E5EA; margin-bottom: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }}
+    /* 정보 박스 스타일 */
+    .info-box {{ background-color: #F2F2F7; padding: 22px; border-radius: 25px; border: 1px solid #E5E5EA; margin-bottom: 25px; }}
+    .sub-card {{ background-color: #FFFFFF; padding: 18px; border-radius: 20px; border: 1px solid #E5E5EA; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }}
 
     /* 프로그램 카드 디자인 */
     .program-card {{
@@ -106,7 +95,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# 5. 내비게이션 함수
+# 5. 내비게이션
 def navigate_to(view, target=None):
     st.session_state.view = view
     st.session_state.target = target
@@ -147,11 +136,10 @@ if st.session_state.view == 'home':
         if sel != "조를 선택해 주세요":
             st.markdown(f'<div class="info-box"><b>{sel} 멤버 명단</b><br>{member_data[sel]}</div>', unsafe_allow_html=True)
 
-    # 3. 지도 안내
+    # 3. 지도 (전체 지점 표시)
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     for name, info in program_data.items():
-        # 팝업 글자 크기 보정 (13px)
         popup_html = f'<div style="font-size: 13px; font-weight: 600; font-family: Pretendard; color: #1C1C1E; text-align: center; width: 100px;">{name}</div>'
         folium.Marker([info["lat"], info["lon"]], 
                       popup=folium.Popup(popup_html, max_width=150),
@@ -162,9 +150,13 @@ if st.session_state.view == 'home':
         clicked = re.sub('<[^<]+?>', '', map_res["last_object_clicked_popup"]).strip()
         if clicked in program_data: navigate_to('detail', clicked)
 
-    # 4. 프로그램 리스트
+    # 4. 프로그램 가이드 (리프레시 제외 리스트)
     st.markdown('<h4 style="margin-top:40px; margin-bottom:20px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
+        # 리프레시는 카드 리스트에서 제외 (지도에서만 접근 가능)
+        if "Refresh" in name or "휴식" in name:
+            continue
+            
         img_raw = get_base64_img(info.get("bg_file", ""))
         bg_url = f"data:image/jpeg;base64,{img_raw}" if img_raw else ""
         st.markdown(f"""
@@ -183,7 +175,6 @@ if st.session_state.view == 'home':
     <div class="info-box" style="text-align:center; margin-top:30px;">
         <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h5>
         <p style="color:#3A3A3C; font-size:15px; line-height:1.6; margin-bottom:0;">
-            문의 사항은 아래로 연락주세요.<br>
             <b>박성식 책임 (인재육성팀)</b><br>
             <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
         </p>
@@ -195,7 +186,7 @@ elif st.session_state.view == 'detail':
     name = st.session_state.target
     item = program_data.get(name, {})
     
-    if st.button("← 메인 화면으로 돌아가기"):
+    if st.button("← 돌아가기"):
         navigate_to('home')
 
     img_raw = get_base64_img(item.get("bg_file", ""))
@@ -213,7 +204,6 @@ elif st.session_state.view == 'detail':
         <h3 style="margin-top:0; font-weight:800; font-size: 24px;">{item.get('detail_title')}</h3>
         <p style="font-size: 18px; color: #3A3A3C; line-height: 1.7;">{item.get('desc')}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 30px 0;">
-        <h5 style="margin-top:0; font-weight:800; font-size: 18px;">📝 상세 가이드</h5>
         {"".join([f'<div style="margin-bottom:12px; font-size:16px;">✅ {p}</div>' for p in item.get('points', [])])}
     </div>
     <div style="margin-top:25px;"></div>
@@ -224,3 +214,4 @@ elif st.session_state.view == 'detail':
 
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:11px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
 
+```
