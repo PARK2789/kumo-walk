@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import folium
@@ -46,13 +47,19 @@ program_data, member_data = load_app_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 프리미엄 CSS (디자인 최적화 및 간격 조정)
+# 4. 프리미엄 CSS (디자인 최적화 및 모바일 가로 고정)
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     
     .stApp {{ font-family: 'Pretendard', sans-serif; }}
     
+    /* 모바일 좌우 흔들림 방지 */
+    html, body, [data-testid="stAppViewContainer"] {{
+        overflow-x: hidden !important;
+        width: 100% !important;
+    }}
+
     .block-container {{
         padding-top: 2rem !important;
         padding-bottom: 5rem !important;
@@ -74,7 +81,7 @@ st.markdown(f"""
         border: 1px solid #E5E5EA; margin-bottom: 20px;
     }}
 
-    /* 프로그램 카드 디자인 (간격 축소) */
+    /* 프로그램 카드 디자인 (간격 최적화) */
     .program-card {{
         position: relative; height: 320px; border-radius: 35px;
         margin-bottom: 10px; 
@@ -92,7 +99,7 @@ st.markdown(f"""
     .card-tag {{ font-size: 13px; font-weight: 700; opacity: 0.9; margin-bottom: 5px; }}
     .card-title {{ font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1.2; }}
 
-    /* 버튼 스타일 (슬림 높이) */
+    /* 상세보기 및 돌아가기 버튼 스타일 */
     .stButton>button {{
         width: 100%; border-radius: 18px; background-color: #1C1C1E;
         color: white; font-weight: 600; border: none; 
@@ -100,17 +107,6 @@ st.markdown(f"""
         font-size: 16px;
         margin-bottom: 25px;
     }}
-    
-    /* 지도 링크 버튼 공통 스타일 */
-    .nav-btn {{
-        width: 100%; border-radius: 18px; 
-        height: 3.6em; display: flex; align-items: center; 
-        justify-content: center; text-decoration: none; 
-        font-weight: 700; font-size: 16px; margin-bottom: 12px;
-    }}
-    .naver-btn {{ background-color: #03C75A; color: white; }}
-    .kakao-btn {{ background-color: #FEE500; color: #191919; }}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -122,7 +118,7 @@ def navigate_to(view, target=None):
 
 # --- 화면 렌더링 ---
 if st.session_state.view == 'home':
-    # [메인 화면]
+    # [HOME 화면]
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk⁺</div>
@@ -130,7 +126,7 @@ if st.session_state.view == 'home':
     </div>
     """, unsafe_allow_html=True)
 
-    # 1. 출발 안내
+    # 1. 출발 안내 (분리된 박스 형태)
     st.markdown("#### 🚌 출발 안내")
     st.markdown(f"""
     <div class="info-box">
@@ -153,10 +149,11 @@ if st.session_state.view == 'home':
         if sel != "조를 선택해 주세요":
             st.markdown(f'<div class="info-box"><b>{sel} 멤버 명단</b><br>{member_data[sel]}</div>', unsafe_allow_html=True)
 
-    # 3. 지도 안내
+    # 3. 지도 안내 (모든 지점 마커 표시)
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     for name, info in program_data.items():
+        # 마커 팝업 글자 크기 13px 적용
         popup_html = f'<div style="font-size: 13px; font-weight: 600; font-family: Pretendard; color: #1C1C1E; text-align: center; width: 100px;">{name}</div>'
         folium.Marker([info["lat"], info["lon"]], 
                       popup=folium.Popup(popup_html, max_width=150),
@@ -167,7 +164,7 @@ if st.session_state.view == 'home':
         clicked = re.sub('<[^<]+?>', '', map_res["last_object_clicked_popup"]).strip()
         if clicked in program_data: navigate_to('detail', clicked)
 
-    # 4. 프로그램 가이드 (Refresh 제외)
+    # 4. 프로그램 가이드 (Refresh 항목 제외 리스트)
     st.markdown('<h4 style="margin-top:40px; margin-bottom:20px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
         if "Refresh" in name or "휴식" in name:
@@ -187,7 +184,7 @@ if st.session_state.view == 'home':
         if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
-    # 담당자 연락처
+    # 담당자 정보
     st.markdown(f"""
     <div class="info-box" style="text-align:center; margin-top:30px;">
         <h5 style="margin-top:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h5>
@@ -203,7 +200,7 @@ elif st.session_state.view == 'detail':
     name = st.session_state.target
     item = program_data.get(name, {})
     
-    # 1. 상세 이미지 헤더
+    # 상단 이미지 헤더
     img_raw = get_base64_img(item.get("bg_file", ""))
     bg_url = f"data:image/jpeg;base64,{img_raw}" if img_raw else ""
     st.markdown(f"""
@@ -223,20 +220,13 @@ elif st.session_state.view == 'detail':
         {"".join([f'<div style="margin-bottom:12px; font-size:16px;">• {p}</div>' for p in item.get('points', [])])}
     </div>
     
-    # 2. 지도 길찾기 버튼
-   #<div style="margin-top:30px;">
-   #     <a href="https://map.naver.com/v5/search/{item.get('nav_name', name)}" target="_blank" class="nav-btn naver-btn">
-   #        📍 네이버 지도로 길찾기
-   #     </a>
-   #     <a href="https://map.kakao.com/link/to/{item.get('nav_name', name)},{item.get('lat')},{item.get('lon')}" target="_blank" class="nav-btn kakao-btn">
-   #         📍 카카오맵으로 길찾기
-   #     </a>
-   # </div>
-   # """, unsafe_allow_html=True)
+    <div style="margin-top:40px;"></div>
+    """, unsafe_allow_html=True)
 
-
-    # 3. 돌아가기 버튼 (하단으로 이동)
+    # 돌아가기 버튼 (하단 배치)
     if st.button("← 메인 화면으로 돌아가기"):
         navigate_to('home')
 
 st.markdown("<br><p style='text-align:center; color:#C7C7CC; font-size:11px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
+
+```
