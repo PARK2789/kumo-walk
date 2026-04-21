@@ -89,7 +89,7 @@ st.markdown(f"""
 
     .stButton>button {{
         width: 100%; border-radius: 18px; background-color: #1C1C1E;
-        color: white; font-weight: 600; border: none; height: 3.8em; font-size: 16px;
+        color: white; font-weight: 600; border: none; height: 3em; font-size: 16px;
     }}
     
     /* 네이버 지도 버튼 스타일 */
