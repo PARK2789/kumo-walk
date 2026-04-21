@@ -63,7 +63,7 @@ st.markdown(f"""
 
     .block-container {{
         padding-top: 1.5rem !important;
-        padding-bottom: 4rem !important;
+        padding-bottom: 1rem !important;
         max-width: 100% !important;
     }}
 
