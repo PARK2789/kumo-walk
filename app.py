@@ -111,7 +111,7 @@ if st.session_state.view == 'home':
     """, unsafe_allow_html=True)
 
     # 1. 버스 탑승 및 집결 안내 (NEW)
-    st.markdown("#### 🚌 집결 안내")
+    st.markdown("#### 🚌 출발 안내")
     st.markdown(f"""
     <div class="info-box">
         <div class="bus-card">
