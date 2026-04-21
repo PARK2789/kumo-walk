@@ -124,7 +124,7 @@ if st.session_state.view == 'home':
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk⁺</div>
-        <div style="font-size: 17px; opacity: 0.9; margin-top: 8px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래</div>
+        <div style="font-size: 17px; opacity: 0.9; margin-top: 8px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -132,15 +132,12 @@ if st.session_state.view == 'home':
     st.markdown("#### 🚌 출발 안내")
     st.markdown(f"""
     <div class="info-box">
-        <div style="font-weight:800; color:#007AFF; font-size:17px; margin-bottom:8px;">📍 구미 4공장 출발</div>
-        <div style="font-size:15px; color:#1C1C1E; font-weight:600;">탑승 장소: 정문 앞</div>
-        <div style="font-size:15px; color:#3A3A3C; font-weight:600; margin-top:4px;">출발 시간: <b>15:20까지 집결</b></div>
+        <div style="font-weight:800; color:#007AFF; font-size:14px;">📍 구미 4공장 출발</div>
+        <div style="font-size:15px; color:#1C1C1E; font-weight:600;">정문 앞 / 15:20까지 집결</div>
     </div>
     <div class="info-box">
-        <div style="font-weight:800; color:#007AFF; font-size:17px; margin-bottom:8px;">📍 구미 1A 공장 출발</div>
-        <div style="font-size:15px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
-        <div style="font-size:15px; color:#3A3A3C; font-weight:600; margin-top:4px;">출발 시간: <b>15:35까지 집결</b></div>
-        <div style="font-size:15px; color:#8E8E93; margin-top:8px;">※ ID Card 태깅 & 출입게이트 통과 후 대기</div>
+        <div style="font-weight:800; color:#007AFF; font-size:14px;">📍 구미 1A 공장 출발</div>
+        <div style="font-size:15px; color:#1C1C1E; font-weight:600;">매점 앞 / 15:35까지 집결</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -151,18 +148,18 @@ if st.session_state.view == 'home':
         if sel != "조를 선택해 주세요":
             st.markdown(f'<div class="info-box"><b>{sel} 멤버</b><br>{member_data[sel]}</div>', unsafe_allow_html=True)
 
-    # 지도 안내 (텍스트 상시 표시 기능 추가)
+    # 지도 안내 (텍스트 상시 표시 및 딱지치기 클릭 오류 수정)
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     
     for name, info in program_data.items():
-        # 1. 마커 및 클릭 팝업 설정
-        popup_html = f'<div style="font-size:13px; font-weight:600; font-family:Pretendard; text-align:center;">{name}</div>'
+        # 마커 팝업 설정 (정확한 매칭을 위해 name을 팝업 데이터로 사용)
+        popup_content = f'<div id="popup_{name}" style="font-size:13px; font-weight:600; font-family:Pretendard; text-align:center;">{name}</div>'
         folium.Marker([info["lat"], info["lon"]], 
-                      popup=folium.Popup(popup_html, max_width=150),
+                      popup=folium.Popup(popup_content, max_width=150),
                       icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
         
-        # 2. 지도상 텍스트 라벨 추가 (DivIcon 사용)
+        # 지도상 텍스트 라벨 (사용자 요청 기능)
         label_html = f'''
             <div style="
                 font-size: 11px; 
@@ -182,19 +179,29 @@ if st.session_state.view == 'home':
             [info["lat"], info["lon"]],
             icon=folium.features.DivIcon(
                 icon_size=(100,20),
-                icon_anchor=(50, -15), # 마커 아래쪽에 위치
+                icon_anchor=(50, -15),
                 html=label_html
             )
         ).add_to(m)
     
+    # 지도 렌더링
     map_res = st_folium(m, width="100%", height=300, key="home_map")
     
-    # 지도 마커 클릭 시 상세페이지 이동
+    # [수정] 지도 마커 클릭 상세페이지 이동 (딱지치기 등 모든 지점 대응)
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked_raw = map_res["last_object_clicked_popup"]
+        # HTML 태그 제거 후 앞뒤 공백 및 줄바꿈 완전 제거
         clicked_name = re.sub('<[^<]+?>', '', clicked_raw).strip()
+        
+        # program_data의 키와 정확히 매칭되는지 확인
         if clicked_name in program_data:
             navigate_to('detail', clicked_name)
+        else:
+            # 부분 일치 대응 (미세한 문자열 불일치 대비)
+            for key in program_data.keys():
+                if key in clicked_name or clicked_name in key:
+                    navigate_to('detail', key)
+                    break
 
     st.markdown('<h4 style="margin-top:25px; margin-bottom:8px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
@@ -210,15 +217,15 @@ if st.session_state.view == 'home':
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button(f"상세보기", key=f"btn_{name}"):
+        if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
     # 담당자 안내 (홈 하단)
     st.markdown(f"""
     <div class="info-box" style="text-align:center; margin-top:20px;">
-        <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 담당자 안내</h6>
+        <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h6>
         <p style="color:#3A3A3C; font-size:13px; margin:2px 0 0 0;">
-            인재육성팀장 김선화 <a href="tel:010-4488-5567" style="color:#007AFF; text-decoration:none; font-weight:700;">010-4488-5567</a>
+            박성식 책임 (인재육성팀) <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -245,7 +252,7 @@ elif st.session_state.view == 'detail':
         <p style="font-size: 15px; color: #3A3A3C; line-height: 1.5; margin-bottom: 10px;">{item.get('desc')}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 10px 0;">
         <h5 style="margin-top:0; margin-bottom:6px; font-weight:800; font-size: 17px;">📝 상세 가이드</h5>
-        {"".join([f'<div style="margin-bottom:6px; font-size:15px;"> {p}</div>' for p in item.get('points', [])])}
+        {"".join([f'<div style="margin-bottom:6px; font-size:15px;">• {p}</div>' for p in item.get('points', [])])}
     </div>
     <div style="margin-top:10px;"></div>
     """, unsafe_allow_html=True)
@@ -254,4 +261,3 @@ elif st.session_state.view == 'detail':
         navigate_to('home')
 
 st.markdown("<p style='text-align:center; color:#C7C7CC; font-size:11px; margin-top:10px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
-
