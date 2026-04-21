@@ -213,7 +213,7 @@ elif st.session_state.view == 'detail':
         <h3 style="margin-top:0; font-weight:800; font-size: 24px;">{item.get('detail_title')}</h3>
         <p style="font-size: 18px; color: #3A3A3C; line-height: 1.7;">{item.get('desc')}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 30px 0;">
-        {"".join([f'<div style="margin-bottom:12px; font-size:16px;">• {p}</div>' for p in item.get('points', [])])}
+        {"".join([f'<div style="margin-bottom:12px; font-size:16px;"> {p}</div>' for p in item.get('points', [])])}
     </div>
     <div style="margin-top:25px;"></div>
     """, unsafe_allow_html=True)
