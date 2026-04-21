@@ -124,7 +124,7 @@ if st.session_state.view == 'home':
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk⁺</div>
-        <div style="font-size: 17px; opacity: 0.9; margin-top: 8px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div>
+        <div style="font-size: 17px; opacity: 0.9; margin-top: 8px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -245,7 +245,7 @@ elif st.session_state.view == 'detail':
         <p style="font-size: 15px; color: #3A3A3C; line-height: 1.5; margin-bottom: 10px;">{item.get('desc')}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 10px 0;">
         <h5 style="margin-top:0; margin-bottom:6px; font-weight:800; font-size: 17px;">📝 상세 가이드</h5>
-        {"".join([f'<div style="margin-bottom:6px; font-size:15px;">• {p}</div>' for p in item.get('points', [])])}
+        {"".join([f'<div style="margin-bottom:6px; font-size:15px;"> {p}</div>' for p in item.get('points', [])])}
     </div>
     <div style="margin-top:10px;"></div>
     """, unsafe_allow_html=True)
