@@ -46,7 +46,7 @@ program_data, member_data = load_app_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 프리미엄 CSS (여백 극소화 및 버튼 크기 축소)
+# 4. 프리미엄 CSS (여백 극소화 및 버튼 크기 축소 유지)
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -80,7 +80,7 @@ st.markdown(f"""
     }}
     .hero-title {{ font-weight: 900; font-size: 38px; line-height: 1.1; letter-spacing: -2px; }}
 
-    /* 정보 박스 (상하 여백 최소화) */
+    /* 정보 박스 */
     .info-box {{
         background-color: #F2F2F7; padding: 14px 18px; border-radius: 20px;
         border: 1px solid #E5E5EA; margin-bottom: 6px;
@@ -101,12 +101,12 @@ st.markdown(f"""
     .card-content {{ position: relative; z-index: 2; pointer-events: none; }}
     .card-title {{ font-size: 21px; font-weight: 800; letter-spacing: -0.8px; }}
 
-    /* 상세보기 및 돌아가기 버튼 (작고 세련되게 수정) */
+    /* 상세보기 및 돌아가기 버튼 (축소형 유지) */
     .stButton>button {{
         width: 100%; border-radius: 14px; background-color: #1C1C1E;
         color: white; font-weight: 600; border: none; 
-        height: 2.8em; /* 높이 줄임 */
-        font-size: 14px; /* 글자 크기 줄임 */
+        height: 2.8em; 
+        font-size: 14px;
         margin-bottom: 12px;
     }}
 </style>
@@ -128,7 +128,7 @@ if st.session_state.view == 'home':
     </div>
     """, unsafe_allow_html=True)
 
-    # 출발 안내 (분리된 박스)
+    # 출발 안내
     st.markdown("#### 🚌 출발 안내")
     st.markdown(f"""
     <div class="info-box">
@@ -151,18 +151,45 @@ if st.session_state.view == 'home':
         if sel != "조를 선택해 주세요":
             st.markdown(f'<div class="info-box"><b>{sel} 멤버</b><br>{member_data[sel]}</div>', unsafe_allow_html=True)
 
-    # 지도 안내 (상세페이지 이동 기능 복구)
+    # 지도 안내 (텍스트 상시 표시 기능 추가)
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
+    
     for name, info in program_data.items():
+        # 1. 마커 및 클릭 팝업 설정
         popup_html = f'<div style="font-size:13px; font-weight:600; font-family:Pretendard; text-align:center;">{name}</div>'
         folium.Marker([info["lat"], info["lon"]], 
                       popup=folium.Popup(popup_html, max_width=150),
                       icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
+        
+        # 2. 지도상 텍스트 라벨 추가 (DivIcon 사용)
+        label_html = f'''
+            <div style="
+                font-size: 11px; 
+                font-weight: 800; 
+                color: #1C1C1E; 
+                text-align: center; 
+                background-color: rgba(255, 255, 255, 0.85);
+                padding: 2px 6px;
+                border-radius: 10px;
+                border: 1px solid #E5E5EA;
+                white-space: nowrap;
+                font-family: Pretendard;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            ">{name}</div>
+        '''
+        folium.Marker(
+            [info["lat"], info["lon"]],
+            icon=folium.features.DivIcon(
+                icon_size=(100,20),
+                icon_anchor=(50, -15), # 마커 아래쪽에 위치
+                html=label_html
+            )
+        ).add_to(m)
     
     map_res = st_folium(m, width="100%", height=300, key="home_map")
     
-    # 지도 마커 클릭 시 상세페이지 이동 로직
+    # 지도 마커 클릭 시 상세페이지 이동
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked_raw = map_res["last_object_clicked_popup"]
         clicked_name = re.sub('<[^<]+?>', '', clicked_raw).strip()
@@ -186,12 +213,12 @@ if st.session_state.view == 'home':
         if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
-    # 담당자 안내 (홈 하단 유지)
+    # 담당자 안내 (홈 하단)
     st.markdown(f"""
     <div class="info-box" style="text-align:center; margin-top:20px;">
-        <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 담당자 안내</h6>
+        <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h6>
         <p style="color:#3A3A3C; font-size:13px; margin:2px 0 0 0;">
-            인재육성팀장 김선화 <a href="tel:010-4488-5567" style="color:#007AFF; text-decoration:none; font-weight:700;">010-4488-5567</a>
+            박성식 책임 (인재육성팀) <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -204,7 +231,6 @@ elif st.session_state.view == 'detail':
     img_raw = get_base64_img(item.get("bg_file", ""))
     bg_url = f"data:image/jpeg;base64,{img_raw}" if img_raw else ""
     
-    # 상세 이미지 헤더 (높이 150px 축소 및 여백 제거)
     st.markdown(f"""
     <div style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.5)), url('{bg_url}'); 
                 background-size: cover; background-position: center; height: 150px; 
@@ -224,8 +250,8 @@ elif st.session_state.view == 'detail':
     <div style="margin-top:10px;"></div>
     """, unsafe_allow_html=True)
 
-    # 돌아가기 버튼 (글자 크기와 버튼 높이를 줄임)
     if st.button("← 메인 화면으로 돌아가기"):
         navigate_to('home')
 
 st.markdown("<p style='text-align:center; color:#C7C7CC; font-size:11px; margin-top:10px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
+
