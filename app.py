@@ -224,15 +224,15 @@ elif st.session_state.view == 'detail':
     </div>
     
     # 2. 지도 길찾기 버튼
-   <div style="margin-top:30px;">
-        <a href="https://map.naver.com/v5/search/{item.get('nav_name', name)}" target="_blank" class="nav-btn naver-btn">
-            📍 네이버 지도로 길찾기
-        </a>
-        <a href="https://map.kakao.com/link/to/{item.get('nav_name', name)},{item.get('lat')},{item.get('lon')}" target="_blank" class="nav-btn kakao-btn">
-            📍 카카오맵으로 길찾기
-        </a>
-    </div>
-    """, unsafe_allow_html=True)
+   #<div style="margin-top:30px;">
+   #     <a href="https://map.naver.com/v5/search/{item.get('nav_name', name)}" target="_blank" class="nav-btn naver-btn">
+   #        📍 네이버 지도로 길찾기
+   #     </a>
+   #     <a href="https://map.kakao.com/link/to/{item.get('nav_name', name)},{item.get('lat')},{item.get('lon')}" target="_blank" class="nav-btn kakao-btn">
+   #         📍 카카오맵으로 길찾기
+   #     </a>
+   # </div>
+   # """, unsafe_allow_html=True)
 
 
     # 3. 돌아가기 버튼 (하단으로 이동)
