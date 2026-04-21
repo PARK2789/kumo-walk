@@ -191,7 +191,7 @@ if st.session_state.view == 'home':
     <div class="info-box" style="text-align:center; margin-top:20px;">
         <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 담당자 안내</h6>
         <p style="color:#3A3A3C; font-size:13px; margin:2px 0 0 0;">
-            인재육성팀장 김선화 <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-4488-5567</a>
+            인재육성팀장 김선화 <a href="tel:010-4488-5567" style="color:#007AFF; text-decoration:none; font-weight:700;">010-4488-5567</a>
         </p>
     </div>
     """, unsafe_allow_html=True)
