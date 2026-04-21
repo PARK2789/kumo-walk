@@ -224,8 +224,7 @@ elif st.session_state.view == 'detail':
     </div>
     
     # 2. 지도 길찾기 버튼
-    st.markdown(f"""
-    <div style="margin-top:30px; margin-bottom:15px;">
+   <div style="margin-top:30px;">
         <a href="https://map.naver.com/v5/search/{item.get('nav_name', name)}" target="_blank" class="nav-btn naver-btn">
             📍 네이버 지도로 길찾기
         </a>
@@ -234,6 +233,7 @@ elif st.session_state.view == 'detail':
         </a>
     </div>
     """, unsafe_allow_html=True)
+
 
     # 3. 돌아가기 버튼 (하단으로 이동)
     if st.button("← 메인 화면으로 돌아가기"):
