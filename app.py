@@ -118,7 +118,7 @@ if st.session_state.view == 'home':
     """, unsafe_allow_html=True)
 
     # 1. 버스 안내 (분리된 두 개의 박스로 수정)
-    st.markdown("#### 🚌 출발 안내")
+    st.markdown("#### 🚌 출발 안내 (시간 엄수!!)")
     
     st.markdown(f"""
     <div class="info-box">
