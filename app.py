@@ -106,7 +106,7 @@ if st.session_state.view == 'home':
     <div class="info-box">
         <div style="font-weight:800; color:#007AFF; font-size:17px; margin-bottom:8px;">📍 구미 1A 공장 출발</div>
         <div style="font-size:15px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
-        <div style="font-size:15px; color:#3A3A3C; font-weight:600; margin-top:4px;">출발 시간: <b>15:35까지 집결</b></div>
+        <div style="font-size:15px; color:#3A3A3C; font-weight:600; margin-top:4px;">출발 시간: <b>15:30까지 집결</b></div>
         <div style="font-size:15px; color:#8E8E93; margin-top:8px;">※ ID Card 태깅 & 출입게이트 통과 후 대기</div>
     </div>
     """, unsafe_allow_html=True)
