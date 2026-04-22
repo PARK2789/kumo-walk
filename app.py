@@ -59,7 +59,7 @@ st.markdown(f"""
     .hero-section {{
         background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
-        padding: 150px 25px 35px 25px; border-radius: 0 0 35px 35px;
+        padding: 200px 25px 35px 25px; border-radius: 0 0 35px 35px;
         color: white; text-align: left; margin: -5rem -1rem 1rem -1rem;
     }}
     .hero-title {{ font-weight: 900; font-size: 38px; line-height: 1.1; letter-spacing: -2px; }}
