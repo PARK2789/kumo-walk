@@ -154,12 +154,12 @@ if st.session_state.view == 'home':
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button(f"{name} 상세보기", key=f"btn_{name}"):
+        if st.button(f"상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
     st.markdown(f"""
     <div class="info-box" style="text-align:center; margin-top:20px;">
-        <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h6>
+        <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 담당자 안내</h6>
         <p style="color:#3A3A3C; font-size:13px; margin:2px 0 0 0;">
             박성식 책임 (인재육성팀) <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
         </p>
