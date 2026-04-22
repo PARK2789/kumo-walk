@@ -45,7 +45,7 @@ def load_app_data():
     return p_data, m_data
 
 program_data, member_data = load_app_data()
-img_forest = get_base64_img("forest.jpg")
+img_forest = get_base64_img("forest1.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
 # 4. 프리미엄 CSS (요청하신 여백 및 버튼 스타일 유지)
