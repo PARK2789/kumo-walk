@@ -16,7 +16,7 @@ if 'view' not in st.session_state:
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 3. 이미지 및 데이터 처리 (캐싱 적용으로 버튼 클릭 시 렉 제거)
+# 3. 이미지 및 데이터 처리 (캐싱 적용)
 @st.cache_data
 def get_base64_img(file_path):
     if os.path.exists(file_path):
@@ -53,25 +53,21 @@ st.markdown(f"""
     
     .stApp {{ font-family: 'Pretendard', sans-serif; }}
     
-    /* 모바일 가로 흔들림 방지 */
     html, body, [data-testid="stAppViewContainer"] {{
         overflow-x: hidden !important;
         width: 100% !important;
     }}
 
-    /* 컨테이너 상하 여백 다이어트 */
     .block-container {{
         padding-top: 1.2rem !important;
         padding-bottom: 0.5rem !important;
         max-width: 100% !important;
     }}
 
-    /* 위젯 간 기본 간격(Gap) 최소화 */
     [data-testid="stVerticalBlock"] > div {{
         gap: 0.25rem !important;
     }}
 
-    /* 히어로 섹션 */
     .hero-section {{
         background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
@@ -80,13 +76,11 @@ st.markdown(f"""
     }}
     .hero-title {{ font-weight: 900; font-size: 38px; line-height: 1.1; letter-spacing: -2px; }}
 
-    /* 정보 박스 */
     .info-box {{
         background-color: #F2F2F7; padding: 14px 18px; border-radius: 20px;
         border: 1px solid #E5E5EA; margin-bottom: 6px;
     }}
 
-    /* 프로그램 카드 높이 축소 (200px) */
     .program-card {{
         position: relative; height: 200px; border-radius: 25px;
         margin-bottom: 4px; overflow: hidden; background-size: cover;
@@ -101,18 +95,14 @@ st.markdown(f"""
     .card-content {{ position: relative; z-index: 2; pointer-events: none; }}
     .card-title {{ font-size: 21px; font-weight: 800; letter-spacing: -0.8px; }}
 
-    /* 상세보기 및 돌아가기 버튼 (축소형 유지) */
     .stButton>button {{
         width: 100%; border-radius: 14px; background-color: #1C1C1E;
         color: white; font-weight: 600; border: none; 
-        height: 2.8em; 
-        font-size: 14px;
-        margin-bottom: 12px;
+        height: 2.8em; font-size: 14px; margin-bottom: 12px;
     }}
 </style>
 """, unsafe_allow_html=True)
 
-# 5. 내비게이션 함수
 def navigate_to(view, target=None):
     st.session_state.view = view
     st.session_state.target = target
@@ -120,7 +110,6 @@ def navigate_to(view, target=None):
 
 # --- 화면 렌더링 ---
 if st.session_state.view == 'home':
-    # [HOME]
     st.markdown(f"""
     <div class="hero-section">
         <div class="hero-title">CEO Talk⁺</div>
@@ -128,7 +117,6 @@ if st.session_state.view == 'home':
     </div>
     """, unsafe_allow_html=True)
 
-    # 출발 안내
     st.markdown("#### 🚌 출발 안내")
     st.markdown(f"""
     <div class="info-box">
@@ -141,25 +129,25 @@ if st.session_state.view == 'home':
     </div>
     """, unsafe_allow_html=True)
 
-    # 조원 확인
     st.markdown("#### 👥 우리 조원 확인")
     if member_data:
         sel = st.selectbox("조 선택", ["조를 선택해 주세요"] + list(member_data.keys()), label_visibility="collapsed")
         if sel != "조를 선택해 주세요":
             st.markdown(f'<div class="info-box"><b>{sel} 멤버</b><br>{member_data[sel]}</div>', unsafe_allow_html=True)
 
-    # 지도 안내 (텍스트 상시 표시 및 '딱지치기' 매칭 로직 강화)
+    # 지도 안내 (텍스트 상시 표시 및 '딱지치기' 클릭 매칭 로직 수정)
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     
     for name, info in program_data.items():
-        # 마커 팝업 설정
-        popup_content = f'<div style="font-size:13px; font-weight:600; font-family:Pretendard; text-align:center;">{name}</div>'
+        popup_html = f'<div style="font-size:13px; font-weight:600; font-family:Pretendard; text-align:center;">{name}</div>'
+        
+        # 아이콘 마커
         folium.Marker([info["lat"], info["lon"]], 
-                      popup=folium.Popup(popup_content, max_width=150),
+                      popup=folium.Popup(popup_html, max_width=150),
                       icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
         
-        # 지도상 텍스트 라벨 (사용자 요청 기능 유지)
+        # 텍스트 라벨
         label_html = f'''
             <div style="
                 font-size: 11px; font-weight: 800; color: #1C1C1E; text-align: center; 
@@ -177,26 +165,21 @@ if st.session_state.view == 'home':
             )
         ).add_to(m)
     
-    # 지도 렌더링
     map_res = st_folium(m, width="100%", height=300, key="home_map")
     
-    # [수정] 딱지치기 등 특정 지점 클릭 시 이동이 안 되던 버그 해결
+    # [핵심 수정] 지도 클릭 감지 로직 (모든 공백을 제거하고 비교하여 '딱지치기' 오류 해결)
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked_raw = map_res["last_object_clicked_popup"]
-        # HTML 태그 제거 및 불필요한 공백/줄바꿈 완전 제거
-        clicked_name = re.sub(r'<[^>]+>', '', clicked_raw).strip()
+        # HTML 태그 제거 및 모든 종류의 공백(줄바꿈 포함) 제거
+        clicked_clean = re.sub(r'<[^>]+>', '', clicked_raw)
+        clicked_clean = "".join(clicked_clean.split()) # 모든 공백 제거
         
-        # 정확한 매칭 및 포함 여부로 매칭성 강화
-        match_key = None
         for key in program_data.keys():
-            k_clean = key.strip()
-            # 팝업 텍스트와 데이터 키값이 서로 포함관계에 있으면 매칭된 것으로 간주 (딱지치기 매칭 강화)
-            if k_clean == clicked_name or k_clean in clicked_name or clicked_name in k_clean:
-                match_key = key
+            # 데이터의 키값도 공백을 제거하고 비교
+            key_clean = "".join(key.split())
+            if key_clean == clicked_clean:
+                navigate_to('detail', key)
                 break
-        
-        if match_key:
-            navigate_to('detail', match_key)
 
     st.markdown('<h4 style="margin-top:25px; margin-bottom:8px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
@@ -215,7 +198,6 @@ if st.session_state.view == 'home':
         if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
-    # 담당자 안내 (홈 하단 유지)
     st.markdown(f"""
     <div class="info-box" style="text-align:center; margin-top:20px;">
         <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h6>
@@ -226,10 +208,8 @@ if st.session_state.view == 'home':
     """, unsafe_allow_html=True)
 
 elif st.session_state.view == 'detail':
-    # [DETAIL]
     name = st.session_state.target
     item = program_data.get(name, {})
-    
     img_raw = get_base64_img(item.get("bg_file", ""))
     bg_url = f"data:image/jpeg;base64,{img_raw}" if img_raw else ""
     
