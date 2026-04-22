@@ -93,7 +93,7 @@ def normalize_name(text):
 # --- 화면 렌더링 ---
 if st.session_state.view == 'home':
     st.markdown(f"""
-    <div class="hero-section"><div class="hero-title">CEO Talk⁺</div><div style="font-size: 17px; opacity: 0.9; margin-top: 8px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div></div>
+    <div class="hero-section"><div class="hero-title">CEO Talk⁺</div><div style="font-size: 17px; opacity: 0.9; margin-top: 8px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래</div></div>
     """, unsafe_allow_html=True)
 
     st.markdown("#### 🚌 출발 안내")
