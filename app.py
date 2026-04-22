@@ -7,7 +7,7 @@ import os
 import json
 import re
 
-# 1. 페이지 설정 (최상단 고정)
+# 1. 페이지 설정 (반드시 최상단 배치)
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
 # 2. 세션 상태 관리
@@ -16,7 +16,7 @@ if 'view' not in st.session_state:
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 3. 데이터 로딩 및 이미지 처리 함수
+# 3. 데이터 로딩 및 이미지 처리
 def get_base64_img(file_path):
     if os.path.exists(file_path):
         try:
@@ -43,7 +43,7 @@ program_data, member_data = load_app_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 프리미엄 CSS (디자인 유지 및 버벅임 방지)
+# 4. 필수 CSS (군더더기 제거, 표준 레이아웃)
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -64,10 +64,15 @@ st.markdown(f"""
     }}
     .hero-title {{ font-weight: 900; font-size: 46px; line-height: 1.1; letter-spacing: -2px; }}
 
-    /* 정보 박스 스타일 (분리형) */
+    /* 공통 박스 스타일 (조원, 버스안내 등) */
     .info-box {{
-        background-color: #F2F2F7; padding: 24px; border-radius: 28px;
+        background-color: #F2F2F7; padding: 22px; border-radius: 25px;
         border: 1px solid #E5E5EA; margin-bottom: 25px;
+    }}
+    .bus-card {{
+        background-color: #FFFFFF; padding: 18px; border-radius: 20px;
+        border: 1px solid #E5E5EA; margin-bottom: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }}
 
     /* 프로그램 카드 디자인 */
@@ -117,23 +122,20 @@ if st.session_state.view == 'home':
     </div>
     """, unsafe_allow_html=True)
 
-    # 1. 버스 안내 (분리된 두 개의 박스로 수정)
-    st.markdown("#### 🚌 출발 안내")
-    
+    # 1. 버스 탑승 및 집결 안내 (NEW)
+    st.markdown("#### 🚌 버스 탑승 및 집결 안내")
     st.markdown(f"""
     <div class="info-box">
-        <div style="font-weight:800; color:#007AFF; font-size:15px; margin-bottom:8px;">📍 구미 4공장 출발</div>
-        <div style="font-size:17px; color:#1C1C1E; font-weight:600;">탑승 장소: 정문 앞</div>
-        <div style="font-size:16px; color:#3A3A3C; margin-top:4px;">출발 시간: <b>15:20까지 집결</b></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <div class="info-box">
-        <div style="font-weight:800; color:#007AFF; font-size:15px; margin-bottom:8px;">📍 구미 1A 공장 출발</div>
-        <div style="font-size:17px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
-        <div style="font-size:16px; color:#3A3A3C; margin-top:4px;">출발 시간: <b>15:35까지 집결</b></div>
-        <div style="font-size:13px; color:#8E8E93; margin-top:8px;">※ ID Card 태깅 & 출입게이트 통과 후 대기</div>
+        <div class="bus-card">
+            <div style="font-weight:800; color:#007AFF; font-size:14px; margin-bottom:4px;">📍 구미 4공장 출발</div>
+            <div style="font-size:16px; color:#1C1C1E; font-weight:600;">탑승 장소: 정문 버스 승강장</div>
+            <div style="font-size:15px; color:#3A3A3C;">출발 시간: <b>14:30 정시 출발</b></div>
+        </div>
+        <div class="bus-card" style="margin-bottom:0;">
+            <div style="font-weight:800; color:#007AFF; font-size:14px; margin-bottom:4px;">📍 구미 1A 공장 출발</div>
+            <div style="font-size:16px; color:#1C1C1E; font-weight:600;">탑승 장소: 본관 앞 대기</div>
+            <div style="font-size:15px; color:#3A3A3C;">출발 시간: <b>14:50 정시 출발</b></div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -159,13 +161,9 @@ if st.session_state.view == 'home':
         clicked = re.sub('<[^<]+?>', '', map_res["last_object_clicked_popup"]).strip()
         if clicked in program_data: navigate_to('detail', clicked)
 
-    # 4. 프로그램 리스트 (Refresh 항목 필터링)
+    # 4. 프로그램 리스트
     st.markdown('<h4 style="margin-top:40px; margin-bottom:20px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
-        # 'Refresh' 또는 '휴식' 단어가 들어간 항목은 하단 리스트에서 제외
-        if "Refresh" in name or "휴식" in name:
-            continue
-            
         img_raw = get_base64_img(info.get("bg_file", ""))
         bg_url = f"data:image/jpeg;base64,{img_raw}" if img_raw else ""
         st.markdown(f"""
@@ -192,7 +190,7 @@ if st.session_state.view == 'home':
     """, unsafe_allow_html=True)
 
 elif st.session_state.view == 'detail':
-    # [DETAIL VIEW]
+    # [DETAIL]
     name = st.session_state.target
     item = program_data.get(name, {})
     
@@ -214,6 +212,7 @@ elif st.session_state.view == 'detail':
         <h3 style="margin-top:0; font-weight:800; font-size: 24px;">{item.get('detail_title')}</h3>
         <p style="font-size: 18px; color: #3A3A3C; line-height: 1.7;">{item.get('desc')}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 30px 0;">
+        <h5 style="margin-top:0; font-weight:800; font-size: 18px;">📝 상세 가이드</h5>
         {"".join([f'<div style="margin-bottom:12px; font-size:16px;">✅ {p}</div>' for p in item.get('points', [])])}
     </div>
     <div style="margin-top:25px;"></div>
