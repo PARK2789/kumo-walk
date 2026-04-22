@@ -46,7 +46,7 @@ program_data, member_data = load_app_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 프리미엄 CSS (여백 극소화 및 버튼 크기 축소 유지)
+# 4. 프리미엄 CSS (사용자 요청 여백 및 버튼 스타일 유지)
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -82,7 +82,7 @@ st.markdown(f"""
 
     /* 정보 박스 */
     .info-box {{
-        background-color: #F2F2F7; padding: 14px 18px; border-radius: 20px;
+        background-color: #F2F2F7; padding: 14px 18_px; border-radius: 20px;
         border: 1px solid #E5E5EA; margin-bottom: 6px;
     }}
 
@@ -153,26 +153,18 @@ if st.session_state.view == 'home':
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     
     for name, info in program_data.items():
-        # 마커 팝업 설정 (정확한 매칭을 위해 name을 팝업 데이터로 사용)
-        popup_content = f'<div id="popup_{name}" style="font-size:13px; font-weight:600; font-family:Pretendard; text-align:center;">{name}</div>'
+        popup_content = f'<div style="font-size:13px; font-weight:600; font-family:Pretendard; text-align:center;">{name}</div>'
         folium.Marker([info["lat"], info["lon"]], 
                       popup=folium.Popup(popup_content, max_width=150),
                       icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
         
-        # 지도상 텍스트 라벨 (사용자 요청 기능)
+        # 지도상 텍스트 라벨 (사용자 요청 기능 유지)
         label_html = f'''
             <div style="
-                font-size: 11px; 
-                font-weight: 800; 
-                color: #1C1C1E; 
-                text-align: center; 
-                background-color: rgba(255, 255, 255, 0.85);
-                padding: 2px 6px;
-                border-radius: 10px;
-                border: 1px solid #E5E5EA;
-                white-space: nowrap;
-                font-family: Pretendard;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                font-size: 11px; font-weight: 800; color: #1C1C1E; text-align: center; 
+                background-color: rgba(255, 255, 255, 0.85); padding: 2px 6px;
+                border-radius: 10px; border: 1px solid #E5E5EA; white-space: nowrap;
+                font-family: Pretendard; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             ">{name}</div>
         '''
         folium.Marker(
@@ -187,20 +179,23 @@ if st.session_state.view == 'home':
     # 지도 렌더링
     map_res = st_folium(m, width="100%", height=300, key="home_map")
     
-    # [수정] 지도 마커 클릭 상세페이지 이동 (딱지치기 등 모든 지점 대응)
+    # [수정] 딱지치기 클릭 시 상세페이지 이동 오류 해결
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked_raw = map_res["last_object_clicked_popup"]
-        # HTML 태그 제거 후 앞뒤 공백 및 줄바꿈 완전 제거
-        clicked_name = re.sub('<[^<]+?>', '', clicked_raw).strip()
+        # 태그 제거 및 모든 공백/줄바꿈 제거 후 정규화
+        clicked_name = re.sub('<[^<]+?>', '', clicked_raw).replace('\n', '').replace('\r', '').strip()
         
-        # program_data의 키와 정확히 매칭되는지 확인
+        # 데이터에서 매칭되는 항목 찾기
+        found = False
         if clicked_name in program_data:
             navigate_to('detail', clicked_name)
+            found = True
         else:
-            # 부분 일치 대응 (미세한 문자열 불일치 대비)
+            # 글자 포함 여부로 2차 확인 (딱지치기 버그 방지)
             for key in program_data.keys():
                 if key in clicked_name or clicked_name in key:
                     navigate_to('detail', key)
+                    found = True
                     break
 
     st.markdown('<h4 style="margin-top:25px; margin-bottom:8px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
@@ -220,7 +215,7 @@ if st.session_state.view == 'home':
         if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
-    # 담당자 안내 (홈 하단)
+    # 담당자 안내 (홈 하단 유지)
     st.markdown(f"""
     <div class="info-box" style="text-align:center; margin-top:20px;">
         <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h6>
@@ -261,3 +256,4 @@ elif st.session_state.view == 'detail':
         navigate_to('home')
 
 st.markdown("<p style='text-align:center; color:#C7C7CC; font-size:11px; margin-top:10px;'>© 2026 LG Innotek Talent Development Team</p>", unsafe_allow_html=True)
+
