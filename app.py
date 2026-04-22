@@ -82,7 +82,7 @@ st.markdown(f"""
 
     /* 정보 박스 */
     .info-box {{
-        background-color: #F2F2F7; padding: 14px 18_px; border-radius: 20px;
+        background-color: #F2F2F7; padding: 14px 18px; border-radius: 20px;
         border: 1px solid #E5E5EA; margin-bottom: 6px;
     }}
 
@@ -148,11 +148,12 @@ if st.session_state.view == 'home':
         if sel != "조를 선택해 주세요":
             st.markdown(f'<div class="info-box"><b>{sel} 멤버</b><br>{member_data[sel]}</div>', unsafe_allow_html=True)
 
-    # 지도 안내 (텍스트 상시 표시 및 딱지치기 클릭 오류 수정)
+    # 지도 안내 (텍스트 상시 표시 및 '딱지치기' 매칭 로직 강화)
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
     
     for name, info in program_data.items():
+        # 마커 팝업 설정
         popup_content = f'<div style="font-size:13px; font-weight:600; font-family:Pretendard; text-align:center;">{name}</div>'
         folium.Marker([info["lat"], info["lon"]], 
                       popup=folium.Popup(popup_content, max_width=150),
@@ -179,24 +180,23 @@ if st.session_state.view == 'home':
     # 지도 렌더링
     map_res = st_folium(m, width="100%", height=300, key="home_map")
     
-    # [수정] 딱지치기 클릭 시 상세페이지 이동 오류 해결
+    # [수정] 딱지치기 등 특정 지점 클릭 시 이동이 안 되던 버그 해결
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked_raw = map_res["last_object_clicked_popup"]
-        # 태그 제거 및 모든 공백/줄바꿈 제거 후 정규화
-        clicked_name = re.sub('<[^<]+?>', '', clicked_raw).replace('\n', '').replace('\r', '').strip()
+        # HTML 태그 제거 및 불필요한 공백/줄바꿈 완전 제거
+        clicked_name = re.sub(r'<[^>]+>', '', clicked_raw).strip()
         
-        # 데이터에서 매칭되는 항목 찾기
-        found = False
-        if clicked_name in program_data:
-            navigate_to('detail', clicked_name)
-            found = True
-        else:
-            # 글자 포함 여부로 2차 확인 (딱지치기 버그 방지)
-            for key in program_data.keys():
-                if key in clicked_name or clicked_name in key:
-                    navigate_to('detail', key)
-                    found = True
-                    break
+        # 정확한 매칭 및 포함 여부로 매칭성 강화
+        match_key = None
+        for key in program_data.keys():
+            k_clean = key.strip()
+            # 팝업 텍스트와 데이터 키값이 서로 포함관계에 있으면 매칭된 것으로 간주 (딱지치기 매칭 강화)
+            if k_clean == clicked_name or k_clean in clicked_name or clicked_name in k_clean:
+                match_key = key
+                break
+        
+        if match_key:
+            navigate_to('detail', match_key)
 
     st.markdown('<h4 style="margin-top:25px; margin-bottom:8px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
