@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import streamlit as st
 import pandas as pd
 import folium
@@ -6,8 +7,9 @@ import base64
 import os
 import json
 import re
+import unicodedata
 
-# 1. 페이지 설정 (최상단 고정)
+# 1. 페이지 설정
 st.set_page_config(page_title="CEO Talk+", page_icon="🍏", layout="centered")
 
 # 2. 세션 상태 관리
@@ -16,7 +18,7 @@ if 'view' not in st.session_state:
 if 'target' not in st.session_state:
     st.session_state.target = None
 
-# 3. 이미지 및 데이터 처리 (캐싱 적용으로 버튼 클릭 시 렉 제거)
+# 3. 이미지 및 데이터 처리 (캐싱 적용으로 렉 제거)
 @st.cache_data
 def get_base64_img(file_path):
     if os.path.exists(file_path):
@@ -46,32 +48,14 @@ program_data, member_data = load_app_data()
 img_forest = get_base64_img("forest.jpg")
 hero_bg = f"data:image/jpeg;base64,{img_forest}" if img_forest else ""
 
-# 4. 프리미엄 CSS (여백 극소화 및 버튼 크기 축소 유지)
+# 4. 프리미엄 CSS (요청하신 여백 및 버튼 스타일 유지)
 st.markdown(f"""
 <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-    
     .stApp {{ font-family: 'Pretendard', sans-serif; }}
-    
-    /* 모바일 가로 흔들림 방지 */
-    html, body, [data-testid="stAppViewContainer"] {{
-        overflow-x: hidden !important;
-        width: 100% !important;
-    }}
-
-    /* 컨테이너 상하 여백 다이어트 */
-    .block-container {{
-        padding-top: 1.2rem !important;
-        padding-bottom: 0.5rem !important;
-        max-width: 100% !important;
-    }}
-
-    /* 위젯 간 기본 간격(Gap) 최소화 */
-    [data-testid="stVerticalBlock"] > div {{
-        gap: 0.25rem !important;
-    }}
-
-    /* 히어로 섹션 */
+    html, body, [data-testid="stAppViewContainer"] {{ overflow-x: hidden !important; width: 100% !important; }}
+    .block-container {{ padding-top: 1.2rem !important; padding-bottom: 0.5rem !important; max-width: 100% !important; }}
+    [data-testid="stVerticalBlock"] > div {{ gap: 0.25rem !important; }}
     .hero-section {{
         background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.45)), url('{hero_bg}');
         background-size: cover; background-position: center;
@@ -79,122 +63,73 @@ st.markdown(f"""
         color: white; text-align: left; margin: -5rem -1rem 1rem -1rem;
     }}
     .hero-title {{ font-weight: 900; font-size: 38px; line-height: 1.1; letter-spacing: -2px; }}
-
-    /* 정보 박스 */
-    .info-box {{
-        background-color: #F2F2F7; padding: 14px 18px; border-radius: 20px;
-        border: 1px solid #E5E5EA; margin-bottom: 6px;
-    }}
-
-    /* 프로그램 카드 높이 축소 (200px) */
+    .info-box {{ background-color: #F2F2F7; padding: 14px 18px; border-radius: 20px; border: 1px solid #E5E5EA; margin-bottom: 6px; }}
     .program-card {{
-        position: relative; height: 200px; border-radius: 25px;
-        margin-bottom: 4px; overflow: hidden; background-size: cover;
-        background-position: center; display: flex; flex-direction: column;
-        justify-content: flex-end; padding: 20px; color: white;
+        position: relative; height: 200px; border-radius: 25px; margin-bottom: 4px; 
+        overflow: hidden; background-size: cover; background-position: center; 
+        display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; color: white;
     }}
-    .card-overlay {{
-        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-        background: linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(0,0,0,0.85) 100%);
-        z-index: 1;
-    }}
+    .card-overlay {{ position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(0,0,0,0.85) 100%); z-index: 1; }}
     .card-content {{ position: relative; z-index: 2; pointer-events: none; }}
     .card-title {{ font-size: 21px; font-weight: 800; letter-spacing: -0.8px; }}
-
-    /* 상세보기 및 돌아가기 버튼 (축소형 유지) */
-    .stButton>button {{
-        width: 100%; border-radius: 14px; background-color: #1C1C1E;
-        color: white; font-weight: 600; border: none; 
-        height: 2.8em; 
-        font-size: 14px;
-        margin-bottom: 12px;
-    }}
+    .stButton>button {{ width: 100%; border-radius: 14px; background-color: #1C1C1E; color: white; font-weight: 600; border: none; height: 2.8em; font-size: 14px; margin-bottom: 12px; }}
 </style>
 """, unsafe_allow_html=True)
 
-# 5. 내비게이션 함수
 def navigate_to(view, target=None):
     st.session_state.view = view
     st.session_state.target = target
     st.rerun()
 
+# 5. 한글 및 HTML 태그 정규화 함수 (매칭 오류 해결용)
+def normalize_name(text):
+    if not text: return ""
+    # HTML 태그 제거 (<br> 등)
+    clean = re.sub(r'<[^>]+>', '', text)
+    # 한글 인코딩 표준화 (NFC) 및 모든 공백 제거
+    clean = "".join(unicodedata.normalize('NFC', clean).split())
+    return clean
+
 # --- 화면 렌더링 ---
 if st.session_state.view == 'home':
-    # [HOME]
     st.markdown(f"""
-    <div class="hero-section">
-        <div class="hero-title">CEO Talk⁺</div>
-        <div style="font-size: 17px; opacity: 0.9; margin-top: 8px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래</div>
-    </div>
+    <div class="hero-section"><div class="hero-title">CEO Talk⁺</div><div style="font-size: 17px; opacity: 0.9; margin-top: 8px;">함께 걷는 금오산 올레길,<br>우리가 그리는 새로운 미래.</div></div>
     """, unsafe_allow_html=True)
 
-    # 출발 안내
     st.markdown("#### 🚌 출발 안내")
     st.markdown(f"""
-    <div class="info-box">
-        <div style="font-weight:800; color:#007AFF; font-size:17px; margin-bottom:8px;">📍 구미 4공장 출발</div>
-        <div style="font-size:15px; color:#1C1C1E; font-weight:600;">탑승 장소: 정문 앞</div>
-        <div style="font-size:15px; color:#3A3A3C; font-weight:600; margin-top:4px;">출발 시간: <b>15:20까지 집결</b></div>
-    </div>
-    <div class="info-box">
-        <div style="font-weight:800; color:#007AFF; font-size:17px; margin-bottom:8px;">📍 구미 1A 공장 출발</div>
-        <div style="font-size:15px; color:#1C1C1E; font-weight:600;">탑승 장소: 매점 앞</div>
-        <div style="font-size:15px; color:#3A3A3C; font-weight:600; margin-top:4px;">출발 시간: <b>15:35까지 집결</b></div>
-        <div style="font-size:15px; color:#8E8E93; margin-top:8px;">※ ID Card 태깅 & 출입게이트 통과 후 대기</div>
-    </div>
+    <div class="info-box"><div style="font-weight:800; color:#007AFF; font-size:14px;">📍 구미 4공장 출발</div><div style="font-size:15px; color:#1C1C1E; font-weight:600;">정문 앞 / 15:20까지 집결</div></div>
+    <div class="info-box"><div style="font-weight:800; color:#007AFF; font-size:14px;">📍 구미 1A 공장 출발</div><div style="font-size:15px; color:#1C1C1E; font-weight:600;">매점 앞 / 15:35까지 집결</div></div>
     """, unsafe_allow_html=True)
 
-    # 조원 확인
     st.markdown("#### 👥 우리 조원 확인")
     if member_data:
         sel = st.selectbox("조 선택", ["조를 선택해 주세요"] + list(member_data.keys()), label_visibility="collapsed")
         if sel != "조를 선택해 주세요":
             st.markdown(f'<div class="info-box"><b>{sel} 멤버</b><br>{member_data[sel]}</div>', unsafe_allow_html=True)
 
-    # 지도 안내 (텍스트 상시 표시 기능 추가)
     st.markdown("#### 🗺️ 주요 지점 안내")
     m = folium.Map(location=[36.1155, 128.3160], zoom_start=15, tiles="cartodbvoyager")
-    
     for name, info in program_data.items():
-        # 1. 마커 및 클릭 팝업 설정
+        # name에 <br>이 포함되어 있어도 팝업은 그대로 출력
         popup_html = f'<div style="font-size:13px; font-weight:600; font-family:Pretendard; text-align:center;">{name}</div>'
         folium.Marker([info["lat"], info["lon"]], 
                       popup=folium.Popup(popup_html, max_width=150),
                       icon=folium.Icon(color=info["color"], icon=info["icon"], prefix='fa')).add_to(m)
-        
-        # 2. 지도상 텍스트 라벨 추가 (DivIcon 사용)
-        label_html = f'''
-            <div style="
-                font-size: 11px; 
-                font-weight: 800; 
-                color: #1C1C1E; 
-                text-align: center; 
-                background-color: rgba(255, 255, 255, 0.85);
-                padding: 2px 6px;
-                border-radius: 10px;
-                border: 1px solid #E5E5EA;
-                white-space: nowrap;
-                font-family: Pretendard;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            ">{name}</div>
-        '''
-        folium.Marker(
-            [info["lat"], info["lon"]],
-            icon=folium.features.DivIcon(
-                icon_size=(100,20),
-                icon_anchor=(50, -15), # 마커 아래쪽에 위치
-                html=label_html
-            )
-        ).add_to(m)
+        label_html = f'<div style="font-size: 11px; font-weight: 800; color: #1C1C1E; text-align: center; background-color: rgba(255, 255, 255, 0.85); padding: 2px 6px; border-radius: 10px; border: 1px solid #E5E5EA; white-space: nowrap; font-family: Pretendard; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">{name}</div>'
+        folium.Marker([info["lat"], info["lon"]], icon=folium.features.DivIcon(icon_size=(100,20), icon_anchor=(50, -15), html=label_html)).add_to(m)
     
     map_res = st_folium(m, width="100%", height=300, key="home_map")
     
-    # 지도 마커 클릭 시 상세페이지 이동
+    # [핵심 수정] 지도 클릭 감지 로직 (프로그램 이름 안의 <br> 태그 무시 처리)
     if map_res and map_res.get("last_object_clicked_popup"):
         clicked_raw = map_res["last_object_clicked_popup"]
-        clicked_name = re.sub('<[^<]+?>', '', clicked_raw).strip()
-        if clicked_name in program_data:
-            navigate_to('detail', clicked_name)
+        clicked_normalized = normalize_name(clicked_raw)
+        
+        for key in program_data.keys():
+            if normalize_name(key) == clicked_normalized:
+                navigate_to('detail', key)
+                break
 
     st.markdown('<h4 style="margin-top:25px; margin-bottom:8px;">🚩 프로그램 가이드</h4>', unsafe_allow_html=True)
     for name, info in program_data.items():
@@ -210,24 +145,21 @@ if st.session_state.view == 'home':
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button(f"상세보기", key=f"btn_{name}"):
+        if st.button(f"{name} 상세보기", key=f"btn_{name}"):
             navigate_to('detail', name)
 
-    # 담당자 안내 (홈 하단)
     st.markdown(f"""
     <div class="info-box" style="text-align:center; margin-top:20px;">
-        <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 담당자 안내</h6>
+        <h6 style="margin:0; font-weight:800; color:#1C1C1E;">📞 행사 담당자 안내</h6>
         <p style="color:#3A3A3C; font-size:13px; margin:2px 0 0 0;">
-            인재육성팀장 김선화 <a href="tel:010-4488-5567" style="color:#007AFF; text-decoration:none; font-weight:700;">010-4488-5567</a>
+            박성식 책임 (인재육성팀) <a href="tel:010-1234-5678" style="color:#007AFF; text-decoration:none; font-weight:700;">010-1234-5678</a>
         </p>
     </div>
     """, unsafe_allow_html=True)
 
 elif st.session_state.view == 'detail':
-    # [DETAIL]
     name = st.session_state.target
     item = program_data.get(name, {})
-    
     img_raw = get_base64_img(item.get("bg_file", ""))
     bg_url = f"data:image/jpeg;base64,{img_raw}" if img_raw else ""
     
@@ -245,7 +177,7 @@ elif st.session_state.view == 'detail':
         <p style="font-size: 15px; color: #3A3A3C; line-height: 1.5; margin-bottom: 10px;">{item.get('desc')}</p>
         <hr style="border: 0; border-top: 1px solid #E5E5EA; margin: 10px 0;">
         <h5 style="margin-top:0; margin-bottom:6px; font-weight:800; font-size: 17px;">📝 상세 가이드</h5>
-        {"".join([f'<div style="margin-bottom:6px; font-size:15px;"> {p}</div>' for p in item.get('points', [])])}
+        {"".join([f'<div style="margin-bottom:6px; font-size:15px;">• {p}</div>' for p in item.get('points', [])])}
     </div>
     <div style="margin-top:10px;"></div>
     """, unsafe_allow_html=True)
