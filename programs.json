@@ -1,11 +1,11 @@
 {
-  "잔디광장": {
+  "준비 운동 및 <br>기념 촬영": {
     "lat": 36.111006,
     "lon": 128.313156,
     "color": "green",
     "icon": "play",
     "bg_file": "grass1.jpg",
-    "tag": "STARTING POINT",
+    "tag": "잔디 광장",
     "nav_name": "금오산 도립공원 잔디 광장",
     "detail_title": "새로운 연결의 시작",
     "desc": "금오산 도립공원 잔디광장에서 CEO와 <br>광학솔루션사업부 리더가 함께하는 <br>CEO Talk⁺가 진행됩니다.",
@@ -37,7 +37,7 @@
     "color": "red",
     "icon": "flag",
     "bg_file": "ddakji.jpg",
-    "tag": "ACTIVITY",
+    "tag": "뚝방길 평상",
     "nav_name": "금오산 하트 평상",
     "detail_title": "뚝방길 평상에서 펼쳐지는 <br>추억의 딱지치기!",
     "desc": "우리를 가로막는 Bottleneck(딱지)를 <br>LG이노텍의 CoC로 <br>시원하게 넘겨보세요!",
@@ -49,13 +49,13 @@
       "⚠️ 우리 모두 어깨 관절 주의!"
     ]
   },
-  "버드나무 백숙": {
+  "석식 만찬": {
     "lat": 36.113301,
     "lon": 128.316201,
     "color": "purple",
     "icon": "cutlery",
     "bg_file": "food.jpg",
-    "tag": "DINNER TIME",
+    "tag": "버드나무 백숙",
     "detail_title": "CEO와 함께하는 <br>풍성한 만찬!",
     "desc": "금오산의 정기를 담은 건강한 보양식과 <br>함께하는 즐거운 석식 시간입니다.<br>자유로운 분위기 속에서 <br>CEO와 함께 대화를 나눠보세요.",
     "points": [
