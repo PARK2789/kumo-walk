@@ -45,7 +45,7 @@ def load_app_data():
     return p_data, m_data
 
 program_data, member_data = load_app_data()
-img_baseball = get_base64_img("baseball.jpg")
+img_baseball = get_base64_img("baseball.jpeg")
 hero_bg = f"data:image/jpeg;base64,{img_baseball}" if img_baseball else ""
 
 # 4. 프리미엄 CSS (요청하신 여백 및 버튼 스타일 유지)
